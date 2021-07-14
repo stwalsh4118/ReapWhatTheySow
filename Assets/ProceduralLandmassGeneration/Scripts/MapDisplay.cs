@@ -18,7 +18,10 @@ public class MapDisplay : MonoBehaviour
     }
 
     public void DrawMesh(MeshData meshData, Texture2D texture) {
+
+        //set the mesh that we generate to the mesh in our scene
         meshFilter.sharedMesh = meshData.CreateMesh();
+        //set the texture to the mesh to draw the colors
         meshRenderer.sharedMaterial.mainTexture = texture;
     }   
 }
