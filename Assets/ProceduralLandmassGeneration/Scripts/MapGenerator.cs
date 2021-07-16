@@ -17,7 +17,7 @@ public class MapGenerator : MonoBehaviour
 
     public Noise.NormalizeMode normalizeMode;
 
-    public const int mapChunkSize = 241;
+    public const int mapChunkSize = 239;
     [Range(0,6)]
     public int editorLOD;
     public float meshHeightMultiplier;
@@ -70,7 +70,7 @@ public class MapGenerator : MonoBehaviour
     //generates the map that we can see from the noise map
     private MapData GenerateMapData(Vector2 center) {
         //generate our noise map from the perlin noise
-        float[,] noiseMap = Noise.GenerateNoiseMap(mapChunkSize, mapChunkSize, seed, noiseScale, octaves, persistance, lacunarity, center + offset, normalizeMode);
+        float[,] noiseMap = Noise.GenerateNoiseMap(mapChunkSize + 2, mapChunkSize + 2, seed, noiseScale, octaves, persistance, lacunarity, center + offset, normalizeMode);
         Color[] colorMap = new Color[mapChunkSize * mapChunkSize];
 
         //populate our colorMap from our noise map using the colors and value ranges from our preset "regions"
@@ -172,7 +172,7 @@ public class MapGenerator : MonoBehaviour
 
         //generate the falloff map whenever we change the values in the editor
         falloffMap = FalloffGenerator.GenerateFalloffMap(mapChunkSize);
-        
+
         if(lacunarity < 1) {
             lacunarity = 1;
         }
