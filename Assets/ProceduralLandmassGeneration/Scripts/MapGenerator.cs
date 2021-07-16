@@ -14,6 +14,8 @@ public class MapGenerator : MonoBehaviour
     }
     public DrawMode drawMode;
 
+    public Noise.NormalizeMode normalizeMode;
+
     public const int mapChunkSize = 241;
     [Range(0,6)]
     public int editorLOD;
@@ -57,7 +59,7 @@ public class MapGenerator : MonoBehaviour
     //generates the map that we can see from the noise map
     private MapData GenerateMapData(Vector2 center) {
         //generate our noise map from the perlin noise
-        float[,] noiseMap = Noise.GenerateNoiseMap(mapChunkSize, mapChunkSize, seed, noiseScale, octaves, persistance, lacunarity, center + offset);
+        float[,] noiseMap = Noise.GenerateNoiseMap(mapChunkSize, mapChunkSize, seed, noiseScale, octaves, persistance, lacunarity, center + offset, normalizeMode);
         Color[] colorMap = new Color[mapChunkSize * mapChunkSize];
 
         //populate our colorMap from our noise map using the colors and value ranges from our preset "regions"
@@ -66,9 +68,10 @@ public class MapGenerator : MonoBehaviour
                 float currentHeight = noiseMap[x,y];
 
                 for(int i = 0; i < regions.Length; i++) {
-                    if(currentHeight <= regions[i].height) {
+                    if(currentHeight >= regions[i].height) {
                         
                         colorMap[y * mapChunkSize + x] = regions[i].color;
+                    } else {
                         break;
                     }
                 }

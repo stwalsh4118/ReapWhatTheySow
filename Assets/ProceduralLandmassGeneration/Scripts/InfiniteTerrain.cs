@@ -4,15 +4,16 @@ using UnityEngine;
 
 public class InfiniteTerrain : MonoBehaviour
 {   
-    const float viewerMoveThresholdForChunkUpdate = 25f;
-    const float sqrViewerMoveThresholdForChunkUpdate = viewerMoveThresholdForChunkUpdate * viewerMoveThresholdForChunkUpdate;
+    private const float scale = 5f;
+    private const float viewerMoveThresholdForChunkUpdate = 25f;
+    private const float sqrViewerMoveThresholdForChunkUpdate = viewerMoveThresholdForChunkUpdate * viewerMoveThresholdForChunkUpdate;
     public static float maxViewDistance = 450;
     //array to hold user inputted LODs and their respective distance thresholds
     public LODInfo[] detailLevels;
     public Transform viewer;
 
     public static Vector2 viewerPosition;
-    Vector2 previousViewerPosition;
+    private Vector2 previousViewerPosition;
 
     private static MapGenerator mapGenerator;
     private int chunkSize;
@@ -20,10 +21,10 @@ public class InfiniteTerrain : MonoBehaviour
     public Material mapMaterial;
 
     //dictionary to save a terrain chunk and the coordinate its in (each chunk is 1 place on the grid, so middle chunk in 0,0 and chunk on the left is -1,0 etc.)
-    Dictionary<Vector2, TerrainChunk> terrainChunkDict = new Dictionary<Vector2, TerrainChunk>();
+    private Dictionary<Vector2, TerrainChunk> terrainChunkDict = new Dictionary<Vector2, TerrainChunk>();
 
     //list of chunks we need to set not visible since theyre out of range
-    List<TerrainChunk> terrainChunksVisibleLastUpdate = new List<TerrainChunk>();
+    private static List<TerrainChunk> terrainChunksVisibleLastUpdate = new List<TerrainChunk>();
 
     private void Start() {
 
@@ -37,7 +38,7 @@ public class InfiniteTerrain : MonoBehaviour
     }
     
     private void Update() {
-        viewerPosition = new Vector2(viewer.position.x, viewer.position.z);
+        viewerPosition = new Vector2(viewer.position.x, viewer.position.z) / scale;
 
         //only update the visible chunks if the viewer has moved a decent distance to that we dont have to update the chunks every frame needlessly
         if((previousViewerPosition - viewerPosition).sqrMagnitude > sqrViewerMoveThresholdForChunkUpdate) {
@@ -69,11 +70,6 @@ public class InfiniteTerrain : MonoBehaviour
                 //if we've seen this chunk before update it appropriately
                 if(terrainChunkDict.ContainsKey(viewedChunkCoord)) {
                     terrainChunkDict[viewedChunkCoord].UpdateTerrainChunk();
-
-                    //if we can see the chunk this frame, add it to the viewed chunks list to be disabled next frame
-                    if(terrainChunkDict[viewedChunkCoord].IsVisible()) {
-                        terrainChunksVisibleLastUpdate.Add(terrainChunkDict[viewedChunkCoord]);
-                    }
 
                 //else if we haven't seen this chunk before add it to the dictionary of chunks we haven't seen
                 } else {
@@ -118,7 +114,9 @@ public class InfiniteTerrain : MonoBehaviour
             //set the material for the chunk
             meshRenderer.material = material;
             //set the position of the chunk in the world
-            meshObject.transform.position = positionV3;
+            meshObject.transform.position = positionV3 * scale;
+            //set the scale of the chunk
+            meshObject.transform.localScale = Vector3.one * scale;
             //set the parent of the chunk so they can all be under one parent
             meshObject.transform.parent = parent;
             //default set it to not visible
@@ -181,6 +179,9 @@ public class InfiniteTerrain : MonoBehaviour
                         lodMesh.RequestMesh(mapData);
                     }
                 }
+
+                //add this chunk to the visible last update list since it was indeed visible so that we can set it invisible on the next frame
+                terrainChunksVisibleLastUpdate.Add(this);
             }
 
             SetVisible(visible);
