@@ -16,7 +16,7 @@ public class MapGenerator : MonoBehaviour
 
     public const int mapChunkSize = 241;
     [Range(0,6)]
-    public int levelOfDetail;
+    public int editorLOD;
     public float meshHeightMultiplier;
     public AnimationCurve meshHeightCurve;
     public float noiseScale;
@@ -41,7 +41,7 @@ public class MapGenerator : MonoBehaviour
     //gets the data from the GenerateMapData method then draws that data depending on the mode
     public void DrawMapInEditor() {
 
-        MapData mapData = GenerateMapData();
+        MapData mapData = GenerateMapData(Vector2.zero);
 
         //display the different modes depending on which one is selected
         MapDisplay display = FindObjectOfType<MapDisplay>();
@@ -50,14 +50,14 @@ public class MapGenerator : MonoBehaviour
         } else if(drawMode == DrawMode.ColorMap) {
             display.DrawTexture(TextureGenerator.TextureFromColorMap(mapData.colorMap, mapChunkSize, mapChunkSize));
         } else if(drawMode == DrawMode.Mesh) {
-            display.DrawMesh(ProceduralMeshGenerator.GenerateTerrainMesh(mapData.heightMap, meshHeightMultiplier, meshHeightCurve, levelOfDetail), TextureGenerator.TextureFromColorMap(mapData.colorMap, mapChunkSize, mapChunkSize));
+            display.DrawMesh(ProceduralMeshGenerator.GenerateTerrainMesh(mapData.heightMap, meshHeightMultiplier, meshHeightCurve, editorLOD), TextureGenerator.TextureFromColorMap(mapData.colorMap, mapChunkSize, mapChunkSize));
         }
     }
 
     //generates the map that we can see from the noise map
-    private MapData GenerateMapData() {
+    private MapData GenerateMapData(Vector2 center) {
         //generate our noise map from the perlin noise
-        float[,] noiseMap = Noise.GenerateNoiseMap(mapChunkSize, mapChunkSize, seed, noiseScale, octaves, persistance, lacunarity, offset);
+        float[,] noiseMap = Noise.GenerateNoiseMap(mapChunkSize, mapChunkSize, seed, noiseScale, octaves, persistance, lacunarity, center + offset);
         Color[] colorMap = new Color[mapChunkSize * mapChunkSize];
 
         //populate our colorMap from our noise map using the colors and value ranges from our preset "regions"
@@ -79,22 +79,22 @@ public class MapGenerator : MonoBehaviour
     
     //method we call when we want to generate a part of the map
     //takes in an "Action" which is the method that the thread will run after it is finished
-    public void RequestMapData(Action<MapData> callback) {
+    public void RequestMapData(Vector2 center, Action<MapData> callback) {
 
         //initialize a ThreadStart that designates what the thread will being doing when it starts
         ThreadStart threadStart = delegate {
 
             //we designate our thread to run the MapDataThread method with a callback to run after it is finished
-            MapDataThread(callback);
+            MapDataThread(center, callback);
         };
 
         //generate and start the thread to run
         new Thread(threadStart).Start();
     }
 
-    private void MapDataThread(Action<MapData> callback) {
+    private void MapDataThread(Vector2 center, Action<MapData> callback) {
         //generate the map data within the thread
-        MapData mapData = GenerateMapData();
+        MapData mapData = GenerateMapData(center);
 
         //we use the lock keyword to make it so that our queue will not be updated twice at the same time which is possible when threading 
         //so when a thread reaches this point, before executing its code it must wait its turn if another thread is executing code on the queue
@@ -105,17 +105,17 @@ public class MapGenerator : MonoBehaviour
     }
 
     //works the same as Request Map Data from above
-    public void RequestMeshData(MapData mapData, Action<MeshData> callback) {
+    public void RequestMeshData(MapData mapData, int lod, Action<MeshData> callback) {
         ThreadStart threadStart = delegate {
-            MeshDataThread (mapData, callback);
+            MeshDataThread (mapData, lod, callback);
         };
 
         new Thread(threadStart).Start();
     }
 
-    private void MeshDataThread(MapData mapData, Action<MeshData> callback) {
+    private void MeshDataThread(MapData mapData, int lod, Action<MeshData> callback) {
         //generate the mesh data within the thread
-        MeshData meshData = ProceduralMeshGenerator.GenerateTerrainMesh(mapData.heightMap, meshHeightMultiplier, meshHeightCurve, levelOfDetail);
+        MeshData meshData = ProceduralMeshGenerator.GenerateTerrainMesh(mapData.heightMap, meshHeightMultiplier, meshHeightCurve, lod);
 
         //we use the lock keyword to make it so that our queue will not be updated twice at the same time which is possible when threading 
         //so when a thread reaches this point, before executing its code it must wait its turn if another thread is executing code on the queue

@@ -4,10 +4,15 @@ using UnityEngine;
 
 public class InfiniteTerrain : MonoBehaviour
 {   
-    public const float maxViewDistance = 450;
+    const float viewerMoveThresholdForChunkUpdate = 25f;
+    const float sqrViewerMoveThresholdForChunkUpdate = viewerMoveThresholdForChunkUpdate * viewerMoveThresholdForChunkUpdate;
+    public static float maxViewDistance = 450;
+    //array to hold user inputted LODs and their respective distance thresholds
+    public LODInfo[] detailLevels;
     public Transform viewer;
 
     public static Vector2 viewerPosition;
+    Vector2 previousViewerPosition;
 
     private static MapGenerator mapGenerator;
     private int chunkSize;
@@ -24,13 +29,22 @@ public class InfiniteTerrain : MonoBehaviour
 
         mapGenerator = FindObjectOfType<MapGenerator>();
         //initialize number of chunks we can see with the set max view distance to calculate chunks we need to see obv
+        maxViewDistance = detailLevels[detailLevels.Length - 1].visibleDistanceThreshold;
         chunkSize = MapGenerator.mapChunkSize - 1;
         chunksVisibleInViewDistance = Mathf.RoundToInt(maxViewDistance / chunkSize);
+
+        UpdateVisibleChunks();
     }
     
     private void Update() {
         viewerPosition = new Vector2(viewer.position.x, viewer.position.z);
-        UpdateVisibleChunks();
+
+        //only update the visible chunks if the viewer has moved a decent distance to that we dont have to update the chunks every frame needlessly
+        if((previousViewerPosition - viewerPosition).sqrMagnitude > sqrViewerMoveThresholdForChunkUpdate) {
+            UpdateVisibleChunks();
+            previousViewerPosition = viewerPosition;
+        }
+        
     }
 
     private void UpdateVisibleChunks() {
@@ -63,7 +77,7 @@ public class InfiniteTerrain : MonoBehaviour
 
                 //else if we haven't seen this chunk before add it to the dictionary of chunks we haven't seen
                 } else {
-                    terrainChunkDict.Add(viewedChunkCoord, new TerrainChunk(viewedChunkCoord, chunkSize, transform, mapMaterial));
+                    terrainChunkDict.Add(viewedChunkCoord, new TerrainChunk(viewedChunkCoord, chunkSize, detailLevels, transform, mapMaterial));
                 }
             }
         }
@@ -78,9 +92,16 @@ public class InfiniteTerrain : MonoBehaviour
         Bounds chunkBounds;
         MeshRenderer meshRenderer;
         MeshFilter meshFilter;
+        LODInfo[] detailLevels;
+        LODMesh[] lodMeshes;
+        MapData mapData;
+        bool mapDataRecieved;
+        int previousLODIndex = -1;
 
         //initialize chunk data
-        public TerrainChunk(Vector2 coord, int size, Transform parent, Material material) {
+        public TerrainChunk(Vector2 coord, int size, LODInfo[] detailLevels, Transform parent, Material material) {
+
+            this.detailLevels = detailLevels;
 
             //calculate the x,z position of the chunk
             position = coord * size;
@@ -103,25 +124,65 @@ public class InfiniteTerrain : MonoBehaviour
             //default set it to not visible
             SetVisible(false);
 
+            //create all of the different meshes with the different level of details for this chunk
+            lodMeshes = new LODMesh[detailLevels.Length];
+            for(int i = 0; i < detailLevels.Length; i++) {
+                lodMeshes[i] = new LODMesh(detailLevels[i].lod, UpdateTerrainChunk);
+            }
+
             //generate the map for the chunk which then generates the mesh for the chunk then sets the mesh for the chunk
-            mapGenerator.RequestMapData(OnMapDataRecieved);
+            mapGenerator.RequestMapData(position, OnMapDataRecieved);
         }
 
-        //once the map data has been generated, generate the mesh from the map data
+        //once the map data has been generated set the map data to this chunk, designate that the data has been recieved, and generate and set the texture based on the 
+        //  map data that was generated
         private void OnMapDataRecieved(MapData mapData) {
-            mapGenerator.RequestMeshData(mapData, OnMeshDataRecieved);
-        }
-
-        //once the mesh has been generated, set the chunk's mesh
-        private void OnMeshDataRecieved(MeshData meshData) {
-            meshFilter.mesh = meshData.CreateMesh();
+            this.mapData = mapData;
+            mapDataRecieved = true;
+            Texture2D texture = TextureGenerator.TextureFromColorMap(mapData.colorMap, MapGenerator.mapChunkSize, MapGenerator.mapChunkSize);
+            meshRenderer.material.mainTexture = texture;
+            UpdateTerrainChunk();
         }
 
         //finds the point on the chunk's perimeter that is closest to the player and if the distance is greater than the max view distance then it will disable it
         public void UpdateTerrainChunk() {
+            if(!mapDataRecieved) {return;}
+
             //returns the smallest sqr distance between the given position and the bounding box
             float viewerDistanceFromNearestEdge = Mathf.Sqrt(chunkBounds.SqrDistance(viewerPosition));
             bool visible = viewerDistanceFromNearestEdge <= maxViewDistance;
+
+            //if the chunk is visible set the mesh to the correct LOD mesh that corresponds to its distance away from the viewer
+            if(visible) {
+                int lodIndex = 0;
+                //loop through all of the distance thresholds to check which LOD corresponds to its distance from the viewer
+                for(int i = 0; i < detailLevels.Length - 1; i++) {
+                    if(viewerDistanceFromNearestEdge > detailLevels[i].visibleDistanceThreshold) {
+                        lodIndex = i+1;
+                    } else {
+                        break;
+                    }
+                }
+
+                //if the chunk is in a different LOD threshold than on the previous frame, change the mesh to match which LOD it should be
+                if(lodIndex != previousLODIndex) {
+
+                    //grab the mesh from the array of different LOD meshes
+                    LODMesh lodMesh = lodMeshes[lodIndex];
+
+                    //if the mesh for the LOD we're in has been created then set the chunks mesh to the LOD mesh
+                    if(lodMesh.hasMesh) {
+                        previousLODIndex = lodIndex;
+                        meshFilter.mesh = lodMesh.mesh;
+
+                    //if the mesh hasnt been created yet (and the mesh hasnt even been requested yet) request that the mesh be created
+                    //  (if it has been requested but not created then we will wait for a later frame to update the LOD)
+                    } else if(!lodMesh.hasRequestedMesh) {
+                        lodMesh.RequestMesh(mapData);
+                    }
+                }
+            }
+
             SetVisible(visible);
         }
 
@@ -132,5 +193,39 @@ public class InfiniteTerrain : MonoBehaviour
         public bool IsVisible() {
             return meshObject.activeSelf;
         }
+    }
+
+    //class used to hold the meshes of differed LODs
+    private class LODMesh {
+        public Mesh mesh;
+        public bool hasRequestedMesh;
+        public bool hasMesh;
+        private int lod;
+        System.Action updateCallback;
+
+        public LODMesh(int lod, System.Action updateCallback) {
+            this.lod = lod;
+            this.updateCallback = updateCallback;
+        }
+
+        //once the mesh data had been generated create the mesh from it
+        private void OnMeshDataRecieved(MeshData meshData) {
+            mesh = meshData.CreateMesh();
+            hasMesh = true;
+            updateCallback();
+        }
+
+        //request that mesh data be created from the given map data with the correct LOD
+        public void RequestMesh(MapData mapData) {
+            hasRequestedMesh = true;
+            mapGenerator.RequestMeshData(mapData, lod, OnMeshDataRecieved);
+        }
+    }
+
+    //struct to hold data relating to the Levels of Detail and their influence based on the distance from the viewer
+    [System.Serializable]
+    public struct LODInfo {
+        public int lod;
+        public float visibleDistanceThreshold;
     }
 }
