@@ -8,8 +8,11 @@ public class InfiniteTerrain : MonoBehaviour
     public Transform viewer;
 
     public static Vector2 viewerPosition;
+
+    private static MapGenerator mapGenerator;
     private int chunkSize;
     private int chunksVisibleInViewDistance;
+    public Material mapMaterial;
 
     //dictionary to save a terrain chunk and the coordinate its in (each chunk is 1 place on the grid, so middle chunk in 0,0 and chunk on the left is -1,0 etc.)
     Dictionary<Vector2, TerrainChunk> terrainChunkDict = new Dictionary<Vector2, TerrainChunk>();
@@ -19,6 +22,7 @@ public class InfiniteTerrain : MonoBehaviour
 
     private void Start() {
 
+        mapGenerator = FindObjectOfType<MapGenerator>();
         //initialize number of chunks we can see with the set max view distance to calculate chunks we need to see obv
         chunkSize = MapGenerator.mapChunkSize - 1;
         chunksVisibleInViewDistance = Mathf.RoundToInt(maxViewDistance / chunkSize);
@@ -59,7 +63,7 @@ public class InfiniteTerrain : MonoBehaviour
 
                 //else if we haven't seen this chunk before add it to the dictionary of chunks we haven't seen
                 } else {
-                    terrainChunkDict.Add(viewedChunkCoord, new TerrainChunk(viewedChunkCoord, chunkSize, transform));
+                    terrainChunkDict.Add(viewedChunkCoord, new TerrainChunk(viewedChunkCoord, chunkSize, transform, mapMaterial));
                 }
             }
         }
@@ -72,18 +76,45 @@ public class InfiniteTerrain : MonoBehaviour
         GameObject meshObject;
         Vector2 position;
         Bounds chunkBounds;
+        MeshRenderer meshRenderer;
+        MeshFilter meshFilter;
 
         //initialize chunk data
-        public TerrainChunk(Vector2 coord, int size, Transform parent) {
+        public TerrainChunk(Vector2 coord, int size, Transform parent, Material material) {
 
+            //calculate the x,z position of the chunk
             position = coord * size;
+
+            //creates bounding box centered in the middle of the chunk and then the size of the chunk
             chunkBounds = new Bounds(position, Vector2.one * size);
+            //calculate the world position of the chunk
             Vector3 positionV3 = new Vector3(position.x, 0, position.y);
-            meshObject = GameObject.CreatePrimitive(PrimitiveType.Plane);
+            //create the chunk game object
+            meshObject = new GameObject("Terrain Chunk");
+            //give the chunk game object a mesh renderer and filter
+            meshRenderer = meshObject.AddComponent<MeshRenderer>();
+            meshFilter = meshObject.AddComponent<MeshFilter>();
+            //set the material for the chunk
+            meshRenderer.material = material;
+            //set the position of the chunk in the world
             meshObject.transform.position = positionV3;
-            meshObject.transform.localScale = Vector3.one * size / 10f;
+            //set the parent of the chunk so they can all be under one parent
             meshObject.transform.parent = parent;
+            //default set it to not visible
             SetVisible(false);
+
+            //generate the map for the chunk which then generates the mesh for the chunk then sets the mesh for the chunk
+            mapGenerator.RequestMapData(OnMapDataRecieved);
+        }
+
+        //once the map data has been generated, generate the mesh from the map data
+        private void OnMapDataRecieved(MapData mapData) {
+            mapGenerator.RequestMeshData(mapData, OnMeshDataRecieved);
+        }
+
+        //once the mesh has been generated, set the chunk's mesh
+        private void OnMeshDataRecieved(MeshData meshData) {
+            meshFilter.mesh = meshData.CreateMesh();
         }
 
         //finds the point on the chunk's perimeter that is closest to the player and if the distance is greater than the max view distance then it will disable it

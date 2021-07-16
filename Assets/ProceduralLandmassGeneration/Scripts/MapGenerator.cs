@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
+using System.Threading;
 
 public class MapGenerator : MonoBehaviour
 {
@@ -30,9 +32,30 @@ public class MapGenerator : MonoBehaviour
 
     public bool autoUpdate;
     public TerrainType[] regions;
+    
+    //queues that hold the data we get back from the threads
+    private Queue<MapThreadInfo<MapData>> mapDataThreadInfoQueue = new Queue<MapThreadInfo<MapData>>();
+    private Queue<MapThreadInfo<MeshData>> meshDataThreadInfoQueue = new Queue<MapThreadInfo<MeshData>>();
+
+
+    //gets the data from the GenerateMapData method then draws that data depending on the mode
+    public void DrawMapInEditor() {
+
+        MapData mapData = GenerateMapData();
+
+        //display the different modes depending on which one is selected
+        MapDisplay display = FindObjectOfType<MapDisplay>();
+        if(drawMode == DrawMode.NoiseMap) {
+            display.DrawTexture(TextureGenerator.TextureFromHeightMap(mapData.heightMap));
+        } else if(drawMode == DrawMode.ColorMap) {
+            display.DrawTexture(TextureGenerator.TextureFromColorMap(mapData.colorMap, mapChunkSize, mapChunkSize));
+        } else if(drawMode == DrawMode.Mesh) {
+            display.DrawMesh(ProceduralMeshGenerator.GenerateTerrainMesh(mapData.heightMap, meshHeightMultiplier, meshHeightCurve, levelOfDetail), TextureGenerator.TextureFromColorMap(mapData.colorMap, mapChunkSize, mapChunkSize));
+        }
+    }
 
     //generates the map that we can see from the noise map
-    public void GenerateMap() {
+    private MapData GenerateMapData() {
         //generate our noise map from the perlin noise
         float[,] noiseMap = Noise.GenerateNoiseMap(mapChunkSize, mapChunkSize, seed, noiseScale, octaves, persistance, lacunarity, offset);
         Color[] colorMap = new Color[mapChunkSize * mapChunkSize];
@@ -51,15 +74,74 @@ public class MapGenerator : MonoBehaviour
                 }
             }
         }
+        return new MapData(noiseMap, colorMap);
+    }
+    
+    //method we call when we want to generate a part of the map
+    //takes in an "Action" which is the method that the thread will run after it is finished
+    public void RequestMapData(Action<MapData> callback) {
 
-        //display the different modes depending on which one is selected
-        MapDisplay display = FindObjectOfType<MapDisplay>();
-        if(drawMode == DrawMode.NoiseMap) {
-            display.DrawTexture(TextureGenerator.TextureFromHeightMap(noiseMap));
-        } else if(drawMode == DrawMode.ColorMap) {
-            display.DrawTexture(TextureGenerator.TextureFromColorMap(colorMap, mapChunkSize, mapChunkSize));
-        } else if(drawMode == DrawMode.Mesh) {
-            display.DrawMesh(ProceduralMeshGenerator.GenerateTerrainMesh(noiseMap, meshHeightMultiplier, meshHeightCurve, levelOfDetail), TextureGenerator.TextureFromColorMap(colorMap, mapChunkSize, mapChunkSize));
+        //initialize a ThreadStart that designates what the thread will being doing when it starts
+        ThreadStart threadStart = delegate {
+
+            //we designate our thread to run the MapDataThread method with a callback to run after it is finished
+            MapDataThread(callback);
+        };
+
+        //generate and start the thread to run
+        new Thread(threadStart).Start();
+    }
+
+    private void MapDataThread(Action<MapData> callback) {
+        //generate the map data within the thread
+        MapData mapData = GenerateMapData();
+
+        //we use the lock keyword to make it so that our queue will not be updated twice at the same time which is possible when threading 
+        //so when a thread reaches this point, before executing its code it must wait its turn if another thread is executing code on the queue
+        lock(mapDataThreadInfoQueue) {
+            mapDataThreadInfoQueue.Enqueue(new MapThreadInfo<MapData>(callback, mapData));
+        }
+
+    }
+
+    //works the same as Request Map Data from above
+    public void RequestMeshData(MapData mapData, Action<MeshData> callback) {
+        ThreadStart threadStart = delegate {
+            MeshDataThread (mapData, callback);
+        };
+
+        new Thread(threadStart).Start();
+    }
+
+    private void MeshDataThread(MapData mapData, Action<MeshData> callback) {
+        //generate the mesh data within the thread
+        MeshData meshData = ProceduralMeshGenerator.GenerateTerrainMesh(mapData.heightMap, meshHeightMultiplier, meshHeightCurve, levelOfDetail);
+
+        //we use the lock keyword to make it so that our queue will not be updated twice at the same time which is possible when threading 
+        //so when a thread reaches this point, before executing its code it must wait its turn if another thread is executing code on the queue
+        lock(meshDataThreadInfoQueue) {
+            meshDataThreadInfoQueue.Enqueue(new MapThreadInfo<MeshData>(callback, meshData));
+        }
+    }
+    
+    private void Update() {
+
+        //if we have MapData that has been generated by a thread and is waiting to be used in the queue we loop through the queue and act on the data with the given callback
+        //heads up for me reading this later: if youre threading using an enumerated data type (like a queue) using foreach will throw errors as it tries to enumerate over a changing queue
+        //  if the queue changes due to a thread (which is what i tried at first, idk if that those errors are actually doing anything because it seemed to be doing the callbacks 
+        //  just fine but i switched to just basic for loop and it stopped throwing errors ¯\_(ツ)_/¯)
+        if(mapDataThreadInfoQueue.Count > 0) {
+            for(int i = 0; i < mapDataThreadInfoQueue.Count; i++) {
+                MapThreadInfo<MapData> threadInfo = mapDataThreadInfoQueue.Dequeue();
+                threadInfo.callback(threadInfo.parameter);
+            }
+        }
+
+        if(meshDataThreadInfoQueue.Count > 0) {
+            for(int i = 0; i < meshDataThreadInfoQueue.Count; i++) {
+                MapThreadInfo<MeshData> threadInfo = meshDataThreadInfoQueue.Dequeue();
+                threadInfo.callback(threadInfo.parameter);
+            }
         }
     }
 
@@ -74,12 +156,40 @@ public class MapGenerator : MonoBehaviour
 
     }
 
-    //struct to hold the data that makes up a "region", e.g. the name we give the region, the max height range where the regions color takes affect, and the color to apply to the color map,
-    //if the noiseMap point is within that region's range
-    [System.Serializable]
-    public struct TerrainType {
-        public string name;
-        public float height;
-        public Color color;
+    //struct that will hold the generated data from our threads that we will act upon within Unity's main thread after the map generation thread has completed
+    struct MapThreadInfo<T> {
+
+        //readonly keyword so that our data in immutable
+        //we are also using this for generating map data and mesh data so we can make it generic with the T type so that we can use it with MapData and MeshData
+        public readonly Action<T> callback;
+        public readonly T parameter;
+
+        public MapThreadInfo(Action<T> callback, T parameter)
+        {
+            this.callback = callback;
+            this.parameter = parameter;
+        }
     }
+    
  }
+
+//struct to hold the data that makes up a "region", e.g. the name we give the region, the max height range where the regions color takes affect, and the color to apply to the color map,
+//if the noiseMap point is within that region's range
+[System.Serializable]
+public struct TerrainType {
+    public string name;
+    public float height;
+    public Color color;
+}
+
+//struct to hold our map data instead of just passing the values
+public struct MapData {
+    public readonly float[,] heightMap;
+    public readonly Color[] colorMap;
+
+    public MapData(float[,] heightMap, Color[] colorMap)
+    {
+        this.heightMap = heightMap;
+        this.colorMap = colorMap;
+    }
+}

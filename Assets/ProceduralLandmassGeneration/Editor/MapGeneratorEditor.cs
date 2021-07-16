@@ -17,13 +17,13 @@ public class MapGeneratorEditor : Editor
 
             //if we have autoUpdate enabled within the MapGenerator component we re-generate the map everytime we change (aka draw) the inspector
             if(mapGen.autoUpdate) {
-                mapGen.GenerateMap();
+                mapGen.DrawMapInEditor();
             }
         }
 
         //create an editor button that calls the GenerateMap function everytime we press it
         if(GUILayout.Button("Generate")) {
-            mapGen.GenerateMap();
+            mapGen.DrawMapInEditor();
         }
     }
 
