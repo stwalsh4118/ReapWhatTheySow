@@ -10,7 +10,8 @@ public class MapGenerator : MonoBehaviour
     public enum DrawMode {
         NoiseMap,
         ColorMap,
-        Mesh
+        Mesh,
+        FalloffMap
     }
     public DrawMode drawMode;
 
@@ -31,13 +32,21 @@ public class MapGenerator : MonoBehaviour
     public int seed;
     public Vector2 offset;
 
+    public bool useFalloff;
+
 
     public bool autoUpdate;
     public TerrainType[] regions;
+
+    float[,] falloffMap;
     
     //queues that hold the data we get back from the threads
     private Queue<MapThreadInfo<MapData>> mapDataThreadInfoQueue = new Queue<MapThreadInfo<MapData>>();
     private Queue<MapThreadInfo<MeshData>> meshDataThreadInfoQueue = new Queue<MapThreadInfo<MeshData>>();
+
+    private void Awake() {
+        falloffMap = FalloffGenerator.GenerateFalloffMap(mapChunkSize);
+    }
 
 
     //gets the data from the GenerateMapData method then draws that data depending on the mode
@@ -53,6 +62,8 @@ public class MapGenerator : MonoBehaviour
             display.DrawTexture(TextureGenerator.TextureFromColorMap(mapData.colorMap, mapChunkSize, mapChunkSize));
         } else if(drawMode == DrawMode.Mesh) {
             display.DrawMesh(ProceduralMeshGenerator.GenerateTerrainMesh(mapData.heightMap, meshHeightMultiplier, meshHeightCurve, editorLOD), TextureGenerator.TextureFromColorMap(mapData.colorMap, mapChunkSize, mapChunkSize));
+        } else if(drawMode == DrawMode.FalloffMap) {
+            display.DrawTexture(TextureGenerator.TextureFromHeightMap(FalloffGenerator.GenerateFalloffMap(mapChunkSize)));
         }
     }
 
@@ -65,7 +76,15 @@ public class MapGenerator : MonoBehaviour
         //populate our colorMap from our noise map using the colors and value ranges from our preset "regions"
         for(int y = 0; y < mapChunkSize; y++) {
             for(int x = 0; x < mapChunkSize; x++) {
+                
+                //if we are using the falloff map then we subtract the falloff map from the noise map to get an island surrounded by water
+                if(useFalloff) {
+                    noiseMap[x,y] = Mathf.Clamp01(noiseMap[x,y] - falloffMap[x,y]);
+                }
+
                 float currentHeight = noiseMap[x,y];
+
+
 
                 for(int i = 0; i < regions.Length; i++) {
                     if(currentHeight >= regions[i].height) {
@@ -150,6 +169,10 @@ public class MapGenerator : MonoBehaviour
 
     //called when a value of the script in changed in the editor, we can use it to clamp values to where we want
     private void OnValidate() {
+
+        //generate the falloff map whenever we change the values in the editor
+        falloffMap = FalloffGenerator.GenerateFalloffMap(mapChunkSize);
+        
         if(lacunarity < 1) {
             lacunarity = 1;
         }
