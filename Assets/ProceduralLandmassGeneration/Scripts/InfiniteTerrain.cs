@@ -88,8 +88,10 @@ public class InfiniteTerrain : MonoBehaviour
         Bounds chunkBounds;
         MeshRenderer meshRenderer;
         MeshFilter meshFilter;
+        MeshCollider meshCollider;
         LODInfo[] detailLevels;
         LODMesh[] lodMeshes;
+        LODMesh collisionLODMesh;
         MapData mapData;
         bool mapDataRecieved;
         int previousLODIndex = -1;
@@ -108,9 +110,10 @@ public class InfiniteTerrain : MonoBehaviour
             Vector3 positionV3 = new Vector3(position.x, 0, position.y);
             //create the chunk game object
             meshObject = new GameObject("Terrain Chunk");
-            //give the chunk game object a mesh renderer and filter
+            //give the chunk game object a mesh renderer and filter and collider
             meshRenderer = meshObject.AddComponent<MeshRenderer>();
             meshFilter = meshObject.AddComponent<MeshFilter>();
+            meshCollider = meshObject.AddComponent<MeshCollider>();
             //set the material for the chunk
             meshRenderer.material = material;
             //set the position of the chunk in the world
@@ -126,6 +129,9 @@ public class InfiniteTerrain : MonoBehaviour
             lodMeshes = new LODMesh[detailLevels.Length];
             for(int i = 0; i < detailLevels.Length; i++) {
                 lodMeshes[i] = new LODMesh(detailLevels[i].lod, UpdateTerrainChunk);
+                if(detailLevels[i].useForCollider) {
+                    collisionLODMesh = lodMeshes[i];
+                }
             }
 
             //generate the map for the chunk which then generates the mesh for the chunk then sets the mesh for the chunk
@@ -180,6 +186,14 @@ public class InfiniteTerrain : MonoBehaviour
                     }
                 }
 
+                if(lodIndex == 0) {
+                    if(collisionLODMesh.hasMesh) {
+                        meshCollider.sharedMesh = collisionLODMesh.mesh;
+                    } else if(!collisionLODMesh.hasRequestedMesh) {
+                        collisionLODMesh.RequestMesh(mapData);
+                    }
+                }
+
                 //add this chunk to the visible last update list since it was indeed visible so that we can set it invisible on the next frame
                 terrainChunksVisibleLastUpdate.Add(this);
             }
@@ -228,5 +242,6 @@ public class InfiniteTerrain : MonoBehaviour
     public struct LODInfo {
         public int lod;
         public float visibleDistanceThreshold;
+        public bool useForCollider;
     }
 }

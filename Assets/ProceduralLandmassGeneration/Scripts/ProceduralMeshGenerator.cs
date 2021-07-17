@@ -103,6 +103,9 @@ public static class ProceduralMeshGenerator
             }
         }
 
+        //calculate the normals in the mesh generation so that it can be run in the thread instead of calculating the normals in the main unity thread
+        meshData.BakeNormals();
+
         return meshData;
     }
 }
@@ -116,6 +119,7 @@ public class MeshData {
     private Vector3[] borderVertices;
     private int[] borderTriangles;
     private int borderTriangleIndex;
+    private Vector3[] bakedNormals;
 
     //constructor
     public MeshData(int verticesPerLine) {
@@ -235,13 +239,17 @@ public class MeshData {
 
     }
 
+    public void BakeNormals() {
+        bakedNormals = CalculateNormals();
+    }
+
     //creates an actual mesh from our mesh data
     public Mesh CreateMesh() {
         Mesh mesh = new Mesh();
         mesh.vertices = vertices;
         mesh.triangles = triangles;
         mesh.uv = uvs;
-        mesh.normals = CalculateNormals();
+        mesh.normals = bakedNormals;
         return mesh;
     }
     
