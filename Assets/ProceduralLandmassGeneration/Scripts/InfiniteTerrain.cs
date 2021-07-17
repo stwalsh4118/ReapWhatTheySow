@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class InfiniteTerrain : MonoBehaviour
 {   
-    private const float scale = 5f;
+
     private const float viewerMoveThresholdForChunkUpdate = 25f;
     private const float sqrViewerMoveThresholdForChunkUpdate = viewerMoveThresholdForChunkUpdate * viewerMoveThresholdForChunkUpdate;
     public static float maxViewDistance = 450;
@@ -31,14 +31,14 @@ public class InfiniteTerrain : MonoBehaviour
         mapGenerator = FindObjectOfType<MapGenerator>();
         //initialize number of chunks we can see with the set max view distance to calculate chunks we need to see obv
         maxViewDistance = detailLevels[detailLevels.Length - 1].visibleDistanceThreshold;
-        chunkSize = MapGenerator.mapChunkSize - 1;
+        chunkSize = mapGenerator.mapChunkSize - 1;
         chunksVisibleInViewDistance = Mathf.RoundToInt(maxViewDistance / chunkSize);
 
         UpdateVisibleChunks();
     }
     
     private void Update() {
-        viewerPosition = new Vector2(viewer.position.x, viewer.position.z) / scale;
+        viewerPosition = new Vector2(viewer.position.x, viewer.position.z) / mapGenerator.terrainData.uniformScale;
 
         //only update the visible chunks if the viewer has moved a decent distance to that we dont have to update the chunks every frame needlessly
         if((previousViewerPosition - viewerPosition).sqrMagnitude > sqrViewerMoveThresholdForChunkUpdate) {
@@ -117,9 +117,9 @@ public class InfiniteTerrain : MonoBehaviour
             //set the material for the chunk
             meshRenderer.material = material;
             //set the position of the chunk in the world
-            meshObject.transform.position = positionV3 * scale;
+            meshObject.transform.position = positionV3 * mapGenerator.terrainData.uniformScale;
             //set the scale of the chunk
-            meshObject.transform.localScale = Vector3.one * scale;
+            meshObject.transform.localScale = Vector3.one * mapGenerator.terrainData.uniformScale;
             //set the parent of the chunk so they can all be under one parent
             meshObject.transform.parent = parent;
             //default set it to not visible
@@ -143,8 +143,6 @@ public class InfiniteTerrain : MonoBehaviour
         private void OnMapDataRecieved(MapData mapData) {
             this.mapData = mapData;
             mapDataRecieved = true;
-            Texture2D texture = TextureGenerator.TextureFromColorMap(mapData.colorMap, MapGenerator.mapChunkSize, MapGenerator.mapChunkSize);
-            meshRenderer.material.mainTexture = texture;
             UpdateTerrainChunk();
         }
 
