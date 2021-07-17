@@ -18,5 +18,5 @@ MonoBehaviour:
   persistance: 0.5
   lacunarity: 2
   seed: 69
-  offset: {x: -1.74, y: 0}
-  normalizeMode: 1
+  offset: {x: -7.36, y: 0}
+  normalizeMode: 0
