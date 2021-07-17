@@ -4,7 +4,7 @@ using UnityEngine;
 
 public static class ProceduralMeshGenerator
 {
-    public static MeshData GenerateTerrainMesh(float[,] heightMap, float heightMultiplier, AnimationCurve _heightCurve, int levelOfDetail) {
+    public static MeshData GenerateTerrainMesh(float[,] heightMap, float heightMultiplier, AnimationCurve _heightCurve, int levelOfDetail, bool useFlatShading) {
 
         //threading messes with the values from the passed in height curve so we just create a new height curve with all of the same values *within the thread* and then the curve works
         AnimationCurve heightCurve = new AnimationCurve(_heightCurve.keys);
@@ -25,7 +25,7 @@ public static class ProceduralMeshGenerator
         int verticiesPerLine = ((meshSize - 1) / meshSimplificationIncrement) + 1;
 
         //initialize our mesh's data
-        MeshData meshData = new MeshData(verticiesPerLine);
+        MeshData meshData = new MeshData(verticiesPerLine, useFlatShading);
 
         //create vertex map that includes a border around our mesh size
         int[,] vertexIndicesMap = new int[borderedSize, borderedSize];
@@ -103,8 +103,8 @@ public static class ProceduralMeshGenerator
             }
         }
 
-        //calculate the normals in the mesh generation so that it can be run in the thread instead of calculating the normals in the main unity thread
-        meshData.BakeNormals();
+        //finalize the mesh within the thread so that it doesnt hold up the unity main thread (finalizing contains the calculation of normals which is expensive)
+        meshData.FinalizeMesh();
 
         return meshData;
     }
@@ -120,9 +120,12 @@ public class MeshData {
     private int[] borderTriangles;
     private int borderTriangleIndex;
     private Vector3[] bakedNormals;
+    private bool useFlatShading;
 
     //constructor
-    public MeshData(int verticesPerLine) {
+    public MeshData(int verticesPerLine, bool useFlatShading) {
+        this.useFlatShading = useFlatShading;
+
         vertices = new Vector3[verticesPerLine * verticesPerLine];
         uvs = new Vector2[verticesPerLine * verticesPerLine];
         triangles = new int[(verticesPerLine - 1)*(verticesPerLine - 1)*6];
@@ -239,8 +242,32 @@ public class MeshData {
 
     }
 
-    public void BakeNormals() {
+    public void FinalizeMesh() {
+        if(useFlatShading) {
+            FlatShading();
+        } else {
+            BakeNormals();
+        }
+    }
+
+    private void BakeNormals() {
         bakedNormals = CalculateNormals();
+    }
+
+    //changes the triangles from sharing vertices to having their own vertices so that each triangle has its own normal average that doesnt depend on another triangle
+    //this gives us the flat shading effect which makes each triangle have a single color
+    private void FlatShading() {
+        Vector3[] flatShadedVertices = new Vector3[triangles.Length];
+        Vector2[] flatShadedUVs = new Vector2[triangles.Length];
+
+        for(int i = 0; i < triangles.Length; i++) {
+            flatShadedVertices[i] = vertices[triangles[i]];
+            flatShadedUVs[i] = uvs[triangles[i]];
+            triangles[i] = i;
+        }
+
+        vertices = flatShadedVertices;
+        uvs = flatShadedUVs;
     }
 
     //creates an actual mesh from our mesh data
@@ -249,7 +276,13 @@ public class MeshData {
         mesh.vertices = vertices;
         mesh.triangles = triangles;
         mesh.uv = uvs;
-        mesh.normals = bakedNormals;
+
+        if(useFlatShading) {
+            mesh.RecalculateNormals();
+        } else {
+            mesh.normals = bakedNormals;
+        }
+
         return mesh;
     }
     
