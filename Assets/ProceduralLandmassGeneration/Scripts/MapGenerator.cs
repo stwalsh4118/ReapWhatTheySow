@@ -14,13 +14,17 @@ public class MapGenerator : MonoBehaviour
     }
     public DrawMode drawMode;
 
-    [Range(0,6)]
+    [Range(0,ProceduralMeshGenerator.numSupportedLODs-1)]
     public int editorLOD;
  
     public TerrainData terrainData;
     public NoiseData noiseData;
     public TextureData textureData;
     public Material terrainMaterial;
+    [Range(0, ProceduralMeshGenerator.numSupportedChunkSizes-1)]
+    public int chunkSizeIndex;
+    [Range(0, ProceduralMeshGenerator.numSupportedFlatShadedChunkSizes-1)]
+    public int flatShadedChunkSizeIndex;
 
     public bool autoUpdate;
 
@@ -29,6 +33,11 @@ public class MapGenerator : MonoBehaviour
     //queues that hold the data we get back from the threads
     private Queue<MapThreadInfo<MapData>> mapDataThreadInfoQueue = new Queue<MapThreadInfo<MapData>>();
     private Queue<MapThreadInfo<MeshData>> meshDataThreadInfoQueue = new Queue<MapThreadInfo<MeshData>>();
+
+    private void Awake() {
+        textureData.ApplyToMaterial(terrainMaterial);
+        textureData.UpdateMeshHeights(terrainMaterial, terrainData.minHeight, terrainData.maxHeight);
+    }
 
     private void OnValuesUpdated() {
         if(!Application.isPlaying) {
@@ -44,9 +53,9 @@ public class MapGenerator : MonoBehaviour
     public int mapChunkSize {
         get {
             if(terrainData.useFlatShading) {
-                return 95;
+                return ProceduralMeshGenerator.supportFlatShadedChunkSizes[flatShadedChunkSizeIndex] - 1;
             } else {
-                return 239;
+                return ProceduralMeshGenerator.supportChunkSizes[chunkSizeIndex] - 1;
             }
         }
     }
@@ -54,7 +63,7 @@ public class MapGenerator : MonoBehaviour
 
     //gets the data from the GenerateMapData method then draws that data depending on the mode
     public void DrawMapInEditor() {
-
+        textureData.UpdateMeshHeights(terrainMaterial, terrainData.minHeight, terrainData.maxHeight);
         MapData mapData = GenerateMapData(Vector2.zero);
 
         //display the different modes depending on which one is selected
@@ -88,8 +97,7 @@ public class MapGenerator : MonoBehaviour
                 }
             }
         }
-        
-        textureData.UpdateMeshHeights(terrainMaterial, terrainData.minHeight, terrainData.maxHeight);
+
         return new MapData(noiseMap);
     }
     

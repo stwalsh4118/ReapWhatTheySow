@@ -3,7 +3,13 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public static class ProceduralMeshGenerator
-{
+{   
+    public const int numSupportedLODs = 5;
+    public const int numSupportedChunkSizes = 9;
+    public const int numSupportedFlatShadedChunkSizes = 3;
+    public static readonly int[] supportChunkSizes = {48, 72, 96, 120, 144, 168, 192, 216, 240};
+    public static readonly int[] supportFlatShadedChunkSizes = {48, 72, 96};
+
     public static MeshData GenerateTerrainMesh(float[,] heightMap, float heightMultiplier, AnimationCurve _heightCurve, int levelOfDetail, bool useFlatShading) {
 
         //threading messes with the values from the passed in height curve so we just create a new height curve with all of the same values *within the thread* and then the curve works
