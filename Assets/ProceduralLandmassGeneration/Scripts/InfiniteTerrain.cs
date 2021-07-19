@@ -131,6 +131,8 @@ public class InfiniteTerrain : MonoBehaviour
             Vector3 positionV3 = new Vector3(position.x, 0, position.y);
             //create the chunk game object
             meshObject = new GameObject("Terrain Chunk");
+            GameObject Water = Instantiate(Resources.Load("Prefabs/Water", typeof (GameObject))) as GameObject;
+            Water.transform.parent = meshObject.transform;
             //give the chunk game object a mesh renderer and filter and collider
             meshRenderer = meshObject.AddComponent<MeshRenderer>();
             meshFilter = meshObject.AddComponent<MeshFilter>();
@@ -200,7 +202,8 @@ public class InfiniteTerrain : MonoBehaviour
                     if(lodMesh.hasMesh) {
                         previousLODIndex = lodIndex;
                         meshFilter.mesh = lodMesh.mesh;
-                        RandomObjectSpawner.instance.SpawnObjects(lodMesh.mesh.vertices, position);
+                        //RandomObjectSpawner.instance.SpawnObjects(lodMesh.mesh.vertices, position);
+                        RandomObjectSpawner.instance.SpawnObjectsPoisson(lodMesh.mesh.vertices, position);
 
                     //if the mesh hasnt been created yet (and the mesh hasnt even been requested yet) request that the mesh be created
                     //  (if it has been requested but not created then we will wait for a later frame to update the LOD)
