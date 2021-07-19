@@ -2,7 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-[CreateAssetMenu()]
+[CreateAssetMenu (fileName = "new TerrainData",menuName = "UpdateableData/TerrainData")]
+
 public class TerrainData : UpdateableData
 {
     public float meshHeightMultiplier;

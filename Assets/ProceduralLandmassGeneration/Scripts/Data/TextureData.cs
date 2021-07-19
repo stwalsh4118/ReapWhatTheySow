@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 
-[CreateAssetMenu()]
+[CreateAssetMenu (fileName = "new TextureData",menuName = "UpdateableData/TextureData")]
+
 public class TextureData : UpdateableData
 {   
     const int textureSize = 512;

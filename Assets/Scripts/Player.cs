@@ -21,7 +21,7 @@ public class Player : MonoBehaviour
     private void OnTriggerEnter(Collider other) {
         
         //if we collided with a dropped item
-        if(other.gameObject.tag == "Item") {
+        if(other.gameObject.GetComponent<DroppedItem>()) {
             Debug.Log("on trigger enter");
             Inventory.instance.AddItem(other.gameObject.GetComponent<DroppedItem>().item);
             Destroy(other.gameObject);

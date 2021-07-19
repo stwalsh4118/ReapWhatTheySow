@@ -19,16 +19,9 @@ public class ClickOnObject : MonoBehaviour
             if(Input.GetMouseButtonDown(0)) {
                 print(hit.collider.name);
 
-                //if the object we hit has the Minable tag, then make it do whatever mine function it has
-                if(hit.transform.tag == "Mineable") {
-                    hit.transform.SendMessage("Hit");
-                }
-
-            } else if(Input.GetMouseButtonDown(1)) {
-                print("Right clicked");
-
-                if(hit.transform.tag == "Interactable") {
-                    hit.transform.SendMessage("Interact");
+                if(hit.transform.GetComponent<Interactable>()) {
+                    Vector3 closerHitPoint = ((hit.distance * .95f) * ray.direction) + transform.position; 
+                    hit.transform.SendMessage("Interact", closerHitPoint);
                 }
             }
          }

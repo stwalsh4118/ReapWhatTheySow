@@ -203,7 +203,7 @@ public class InfiniteTerrain : MonoBehaviour
                         previousLODIndex = lodIndex;
                         meshFilter.mesh = lodMesh.mesh;
                         //RandomObjectSpawner.instance.SpawnObjects(lodMesh.mesh.vertices, position);
-                        RandomObjectSpawner.instance.SpawnObjectsPoisson(lodMesh.mesh.vertices, position);
+                        RandomObjectSpawner.instance.SpawnObjectsPoisson(lodMesh.mesh.vertices, position, meshObject);
 
                     //if the mesh hasnt been created yet (and the mesh hasnt even been requested yet) request that the mesh be created
                     //  (if it has been requested but not created then we will wait for a later frame to update the LOD)

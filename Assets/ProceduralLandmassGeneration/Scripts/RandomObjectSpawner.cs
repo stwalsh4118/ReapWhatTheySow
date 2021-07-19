@@ -36,7 +36,7 @@ public class RandomObjectSpawner : MonoBehaviour
 
     }
 
-    public void SpawnObjectsPoisson(Vector3[] vertices, Vector2 position) {
+    public void SpawnObjectsPoisson(Vector3[] vertices, Vector2 position, GameObject TerrainChunk) {
         Vector2 mapSize = new Vector2((float)mapGenerator.mapChunkSize, (float)mapGenerator.mapChunkSize);
         List<Vector2> spawnPoints = PoissonDiscSampling.GeneratePoints(3f, mapSize, 5);
 
@@ -56,6 +56,7 @@ public class RandomObjectSpawner : MonoBehaviour
 
                     spawnedObject.transform.localScale = new Vector3(3,3,3);
                     spawnedObject.transform.eulerAngles = RandomYRotation(0f, 360f);
+                    spawnedObject.transform.parent = TerrainChunk.transform;
                 }
 
             }

@@ -19,4 +19,8 @@ public class Interactable : MonoBehaviour
     public virtual void Interact() {
         Debug.Log("Interacted with");
     }
+
+    public virtual void Interact(Vector3 position) {
+        
+    }
 }
