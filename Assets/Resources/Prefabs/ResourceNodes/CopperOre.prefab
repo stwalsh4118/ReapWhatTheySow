@@ -110,3 +110,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   resource: {fileID: 11400000, guid: 9d7b9efe693b76642a7e24d0cd51b064, type: 2}
+  spawnItemsAroundOnGeneration: 0
+  initialSpawnAmount: 3
+  initialSpawnRadius: 6

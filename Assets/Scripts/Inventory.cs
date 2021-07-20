@@ -50,6 +50,12 @@ public class Inventory : MonoBehaviour
             activeHotbarSlot++;
             HotbarSlots[activeHotbarSlot - 1].GetComponent<Image>().color = hotbarSlotHighlight;
         }
+
+        if(Input.GetKeyDown(KeyCode.Q)) {
+            if(instance.Items.Count > 0) {
+                RemoveItem(instance.Items[activeHotbarSlot - 1], true);
+            }
+        }
     }
 
     public void UpdateHotbar() {
@@ -93,6 +99,38 @@ public class Inventory : MonoBehaviour
             Debug.Log("Number of items in inventory after adding " + StackSizes[positionInInventory].ToString());
             UpdateHotbar();
         }
+    }
+
+    public void RemoveItem(Item itemToRemove, bool dropItem) {
+        
+        Item itemToRemoveInInventory = instance.Items.Find((x) => x == itemToRemove);
+
+        if(!itemToRemoveInInventory) {
+            Debug.Log("Can't remove an Item that isn't in your inventory dumbass");
+        } else {
+            int positionInInventory = instance.Items.IndexOf(itemToRemoveInInventory);
+            StackSizes[positionInInventory]--;
+            if(StackSizes[positionInInventory] <= 0) {
+                StackSizes.RemoveAt(positionInInventory);
+                instance.Items.RemoveAt(positionInInventory);
+            }
+            if(dropItem) {
+                DropItem(itemToRemove);
+            }
+        }
+        UpdateHotbar();
+    }
+
+    public void DropItem(Item itemToDrop) {
+        GameObject droppedItem = Instantiate(Resources.Load(itemToDrop.prefabPath, typeof (GameObject))) as GameObject;
+
+        Transform player = GameObject.Find("FPSPlayer").transform;
+
+        Vector3 forward = Vector3.Normalize(player.forward);
+        forward.y = 0;
+        Vector3 spawnPoint = player.position +  forward * 3f;
+        //put the spawned object above the spawner object
+        droppedItem.transform.position = spawnPoint;
     }
 
 }
