@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 3339274}
   - component: {fileID: 2386716}
   - component: {fileID: 3150667649395005163}
+  - component: {fileID: -2182361518629611233}
   m_Layer: 0
   m_Name: CoconutPalm
   m_TagString: Untagged
@@ -98,3 +99,17 @@ MonoBehaviour:
   spawnItemsAroundOnGeneration: 1
   initialSpawnAmount: 1
   initialSpawnRadius: 2
+--- !u!64 &-2182361518629611233
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 176278}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 4
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: f59e9c62851aaed46bb0599645bdfdc2, type: 3}
