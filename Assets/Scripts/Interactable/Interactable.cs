@@ -10,17 +10,11 @@ public class Interactable : MonoBehaviour
         
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
-
     public virtual void Interact() {
         Debug.Log("Interacted with");
     }
 
     public virtual void Interact(Vector3 position) {
-        
+
     }
 }

@@ -13,9 +13,10 @@ public class Inventory : MonoBehaviour
     public GameObject InventoryMenu;
     public GameObject InventoryUI;
     public GameObject InventorySlot;
+    public GameObject Crosshair;
     public List<Item> Items;
     public List<int> StackSizes;
-    int maxStackSize = 64;
+    int maxStackSize = 2;
     public int numInventorySlots = 35;
     public int numHotbarSlots = 9;
     public int activeHotbarSlot = 1;
@@ -29,6 +30,7 @@ public class Inventory : MonoBehaviour
         instance = this;
 
         InventoryMenu.SetActive(false);
+        Crosshair = GameObject.Find("Crosshair");
 
         //set the color to use for the highlighted hotbar slot
         ColorUtility.TryParseHtmlString("#715A53", out hotbarSlotHighlight);
@@ -59,10 +61,12 @@ public class Inventory : MonoBehaviour
 
         if(Input.GetKeyDown(KeyCode.Q)) {
             if(instance.Items.Count > 0) {
-                RemoveItem(instance.Items[activeHotbarSlot - 1], activeHotbarSlot - 1, true);
+                RemoveItem(instance.Items[activeHotbarSlot - 1], activeHotbarSlot - 1, 3, true);
             }
         } else if(Input.GetKeyDown(KeyCode.Tab)) {
             InventoryMenu.SetActive(!InventoryMenu.activeSelf);
+            GameObject.FindObjectOfType<SC_FPSController>().ToggleMovement();
+            Crosshair.SetActive(!Crosshair.activeSelf);
         }
         
     }
@@ -114,8 +118,8 @@ public class Inventory : MonoBehaviour
 
     public bool AddItem(Item itemToAdd) {
 
-        List<Item> allStacksInInventory = instance.Items.FindAll((x) => x == itemToAdd);
-        List<int> indices = Enumerable.Range(0, instance.Items.Count).Where(i => instance.Items[i] == itemToAdd).ToList();
+        bool itemInInventory = ItemInInventory(itemToAdd);
+        List<int> indices = GetInventoryIndices(itemToAdd);
 
         if(Items.Count == numInventorySlots + 9 && StackSizes.Last() == maxStackSize) {
             Debug.Log("Inventory full dumbass");
@@ -126,7 +130,7 @@ public class Inventory : MonoBehaviour
             Debug.Log(index);
         }
 
-        if(allStacksInInventory.Count == 0) {
+        if(!itemInInventory) {
             Debug.Log("Item not in inventory");
             instance.Items.Add(itemToAdd);
             instance.StackSizes.Add(1);
@@ -157,21 +161,79 @@ public class Inventory : MonoBehaviour
         return true;
     }
 
-    public void RemoveItem(Item itemToRemove, int inventoryIndex, bool dropItem) {
+    
+    //@ SHOULD MAYBE RESTACK ITEMS AFTER REMOVING MAYBE IDK, IT WORKS RN THO
+    public bool RemoveItem(Item itemToRemove, int startIndex, int amountToRemove, bool dropItem) {
+        
+        //get where the item to remove is within our inventory
+        List<int> indicesOfItemInInventory = GetInventoryIndices(itemToRemove);
+        int sumOfItemsInInventory = 0;
 
-        if(itemToRemove != Items[inventoryIndex]) {
-            Debug.Log("You probably don't want to remove this item dumbass");
+        //get the total number of the item we want to remove in our inventory 
+        for(int i = 0; i < indicesOfItemInInventory.Count; i++) {
+            sumOfItemsInInventory += StackSizes[indicesOfItemInInventory[i]];
+        }
+
+        //if we dont have enough items in our inventory we obviously cant remove them soo we stop
+        if(sumOfItemsInInventory < amountToRemove) {
+            Debug.Log("Not enough items to remove in your inventory dumbass");
+            return false;
+        
+        //else if we do have enough items in our inventory continue with the removal process
         } else {
-            StackSizes[inventoryIndex]--;
-            if(StackSizes[inventoryIndex] <= 0) {
-                StackSizes.RemoveAt(inventoryIndex);
-                instance.Items.RemoveAt(inventoryIndex);
-            }
-            if(dropItem) {
-                DropItem(itemToRemove);
+            int numItemsToRemove = amountToRemove;
+            //loop through all of the stacks of the item in our inventory
+            for(int i = 0; i < indicesOfItemInInventory.Count; i++) {
+
+                //if the stack we're looking at is before our start then move to the next stack
+                if(indicesOfItemInInventory[i] < startIndex) {
+                   
+                } else {
+
+                    //if the number of items in the stack is less than the number we want to remove then set it to 0 so we can remove it later and
+                    //remove the stack amount from the amount we're removing
+                    if(StackSizes[indicesOfItemInInventory[i]] <= numItemsToRemove) {
+                        numItemsToRemove -= StackSizes[indicesOfItemInInventory[i]];
+                        StackSizes[indicesOfItemInInventory[i]] = 0;
+
+                    //else if there are more items in the stack then just remove the amount we have left to remove from the stack then remove all the
+                    //items with 0 in their stack from our inventory
+                    } else {
+                        StackSizes[indicesOfItemInInventory[i]] -= numItemsToRemove;
+                        
+                        for(int index = StackSizes.Count - 1; index >= 0; index--) {
+                            if(StackSizes[index] == 0) {
+                                StackSizes.RemoveAt(index);
+                                Items.RemoveAt(index);
+                            }
+                        }
+
+                        if(dropItem) {
+                            DropItem(itemToRemove);
+                        }
+                        UpdateInventory(Items);
+                        return true;
+                    }
+                }
+
             }
         }
+
+        //i dont think i need this extra check but maybe?
+
+        for(int index = StackSizes.Count - 1; index >= 0; index--) {
+            if(StackSizes[index] == 0) {
+                StackSizes.RemoveAt(index);
+                Items.RemoveAt(index);
+            }
+        }
+
+        if(dropItem) {
+            DropItem(itemToRemove);
+        }
+
         UpdateInventory(Items);
+        return true;
     }
 
     public void DropItem(Item itemToDrop) {
@@ -184,6 +246,15 @@ public class Inventory : MonoBehaviour
         Vector3 spawnPoint = player.position +  forward * 3f;
         //put the spawned object above the spawner object
         droppedItem.transform.position = spawnPoint;
+    }
+
+    public List<int> GetInventoryIndices(Item item) {
+        return Enumerable.Range(0, instance.Items.Count).Where(i => instance.Items[i] == item).ToList();
+    }
+
+    public bool ItemInInventory(Item item) {
+        return instance.Items.FindAll((x) => x == item).Count > 0;
+
     }
 
 }

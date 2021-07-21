@@ -6,7 +6,8 @@ public class ResourceNode : Interactable
 {
     public Item resource;
     public bool spawnItemsAroundOnGeneration;
-    public int initialSpawnAmount;
+    [Range(.001f, 1000)]
+    public float initialSpawnAmount;
     public float initialSpawnRadius;
     // Start is called before the first frame update
     void Start()
@@ -14,24 +15,35 @@ public class ResourceNode : Interactable
         InitialSpawn();
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
 
     public void InitialSpawn() {
         if(spawnItemsAroundOnGeneration) {
-            for(int i = 0; i < initialSpawnAmount; i++) {
-                Vector2 pointOnUnitCircle = Random.insideUnitCircle.normalized;
-                if(pointOnUnitCircle.x == 0 && pointOnUnitCircle.y == 0) {
-                    pointOnUnitCircle = Vector2.one;
+
+            if(initialSpawnAmount < 1) {
+                if(Random.Range(0f , 1f) < initialSpawnAmount) {
+                    Vector2 pointOnUnitCircle = Random.insideUnitCircle.normalized;
+                    if(pointOnUnitCircle.x == 0 && pointOnUnitCircle.y == 0) {
+                        pointOnUnitCircle = Vector2.one;
+                    }
+
+                    Vector3 spawnPoint = new Vector3(pointOnUnitCircle.x * initialSpawnRadius, 0, pointOnUnitCircle.y * initialSpawnRadius) + transform.position;
+
+                    GameObject spawnedObject = Instantiate(Resources.Load(resource.prefabPath, typeof (GameObject))) as GameObject;
+                    spawnedObject.transform.position = spawnPoint;
+                    }
+            } else {
+
+                for(int i = 0; i < (int)initialSpawnAmount; i++) {
+                    Vector2 pointOnUnitCircle = Random.insideUnitCircle.normalized;
+                    if(pointOnUnitCircle.x == 0 && pointOnUnitCircle.y == 0) {
+                        pointOnUnitCircle = Vector2.one;
+                    }
+
+                    Vector3 spawnPoint = new Vector3(pointOnUnitCircle.x * initialSpawnRadius, 0, pointOnUnitCircle.y * initialSpawnRadius) + transform.position;
+
+                    GameObject spawnedObject = Instantiate(Resources.Load(resource.prefabPath, typeof (GameObject))) as GameObject;
+                    spawnedObject.transform.position = spawnPoint;
                 }
-
-                Vector3 spawnPoint = new Vector3(pointOnUnitCircle.x * initialSpawnRadius, 0, pointOnUnitCircle.y * initialSpawnRadius) + transform.position;
-
-                GameObject spawnedObject = Instantiate(Resources.Load(resource.prefabPath, typeof (GameObject))) as GameObject;
-                spawnedObject.transform.position = spawnPoint;
             }
         }
     }

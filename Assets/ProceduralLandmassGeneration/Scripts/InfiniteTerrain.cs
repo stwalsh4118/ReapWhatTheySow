@@ -133,6 +133,8 @@ public class InfiniteTerrain : MonoBehaviour
             meshObject = new GameObject("Terrain Chunk");
             GameObject Water = Instantiate(Resources.Load("Prefabs/Water", typeof (GameObject))) as GameObject;
             Water.transform.parent = meshObject.transform;
+            GameObject OutOfBoundsPlane = Instantiate(Resources.Load("Prefabs/OutOfBoundsPlane", typeof (GameObject))) as GameObject;
+            OutOfBoundsPlane.transform.parent = meshObject.transform;
             //give the chunk game object a mesh renderer and filter and collider
             meshRenderer = meshObject.AddComponent<MeshRenderer>();
             meshFilter = meshObject.AddComponent<MeshFilter>();

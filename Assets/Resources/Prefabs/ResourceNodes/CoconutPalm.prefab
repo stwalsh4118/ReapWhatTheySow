@@ -97,7 +97,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   resource: {fileID: 11400000, guid: 4206c0713485c8b4c83f30c79a19c6b1, type: 2}
   spawnItemsAroundOnGeneration: 1
-  initialSpawnAmount: 1
+  initialSpawnAmount: 0.11
   initialSpawnRadius: 2
 --- !u!64 &-2182361518629611233
 MeshCollider:
