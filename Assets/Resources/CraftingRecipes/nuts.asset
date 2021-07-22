@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9c5d028d2b1308045b991e862717be2c, type: 3}
+  m_Name: nuts
+  m_EditorClassIdentifier: 
+  components:
+  - item: {fileID: 11400000, guid: 4206c0713485c8b4c83f30c79a19c6b1, type: 2}
+    amount: 4
+  - item: {fileID: 11400000, guid: 9d7b9efe693b76642a7e24d0cd51b064, type: 2}
+    amount: 2
+  - item: {fileID: 11400000, guid: 44568cf8364952f4d949ef79773311ad, type: 2}
+    amount: 1
+  itemProduced: {fileID: 11400000, guid: 3abeb8e44df4c6e40b53df28239b9d27, type: 2}
+  amountProduced: 69

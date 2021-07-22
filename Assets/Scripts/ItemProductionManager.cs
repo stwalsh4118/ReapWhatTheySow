@@ -42,6 +42,7 @@ public class ItemProductionManager : MonoBehaviour
 
         Inventory.instance.Items.Add(recipe.itemProduced);
         Inventory.instance.StackSizes.Add(1);
+        Inventory.instance.UpdateInventory(Inventory.instance.Items);
         Debug.Log("Added " + recipe.itemProduced.name + " to your inventory");
 
         return true;

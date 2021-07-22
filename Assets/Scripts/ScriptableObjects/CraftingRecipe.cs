@@ -7,6 +7,7 @@ public class CraftingRecipe : ScriptableObject
 {
     public RecipeComponent[] components;
     public Item itemProduced;
+    public int amountProduced;
 }
 
 [System.Serializable]
