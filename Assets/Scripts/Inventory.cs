@@ -60,8 +60,8 @@ public class Inventory : MonoBehaviour
         }
 
         if(Input.GetKeyDown(KeyCode.Q)) {
-            if(instance.Items.Count > 0) {
-                RemoveItem(instance.Items[activeHotbarSlot - 1], activeHotbarSlot - 1, 3, true);
+            if(instance.Items.Count > activeHotbarSlot - 1) {
+                RemoveItem(instance.Items[activeHotbarSlot - 1], activeHotbarSlot - 1, 1, true);
             }
         } else if(Input.GetKeyDown(KeyCode.Tab)) {
             InventoryMenu.SetActive(!InventoryMenu.activeSelf);
@@ -72,6 +72,11 @@ public class Inventory : MonoBehaviour
     }
 
     public void InitializeInventory(List<Item> itemsInInventory) {
+
+        for(int i = Items.Count; i < numInventorySlots + 9; i++) {
+            Items.Add(null);
+            StackSizes.Add(0);
+        }
 
         for(int i = 0; i < numInventorySlots; i++) {
             GameObject inventorySlot = Instantiate(InventorySlot, InventoryUI.transform);
@@ -85,7 +90,7 @@ public class Inventory : MonoBehaviour
         UpdateHotbar();
 
         for(int i = 9; i < numInventorySlots + 9; i++) {
-            if(Items.Count <= i) {
+            if(Items[i] == null) {
                 InventorySlots[i - 9].transform.Find("Item").GetComponent<Image>().sprite = null;
                 InventorySlots[i - 9].transform.Find("Item").GetComponent<Image>().color = Color.clear;
                 InventorySlots[i - 9].transform.Find("Amount").GetComponent<TextMeshProUGUI>().text = "";
@@ -102,7 +107,7 @@ public class Inventory : MonoBehaviour
         for(int i = 0; i < 9; i++) {
 
             //if if we have less items than hotbar slots, make the slots at the end empty
-            if(Items.Count <= i) {
+            if(Items[i] == null) {
                 HotbarSlots[i].transform.Find("Icon").GetComponent<Image>().sprite = null;
                 HotbarSlots[i].transform.Find("Icon").GetComponent<Image>().color = Color.clear;
                 HotbarSlots[i].transform.Find("Amount").GetComponent<TextMeshProUGUI>().text = "";
@@ -116,48 +121,67 @@ public class Inventory : MonoBehaviour
         }
     }
 
-    public bool AddItem(Item itemToAdd) {
+    public bool AddItem(Item itemToAdd, int amount) {
 
         bool itemInInventory = ItemInInventory(itemToAdd);
         List<int> indices = GetInventoryIndices(itemToAdd);
 
-        if(Items.Count == numInventorySlots + 9 && StackSizes.Last() == maxStackSize) {
-            Debug.Log("Inventory full dumbass");
+        if(!CanAddItem(itemToAdd, amount)) {
+            Debug.Log("No space to add the item(s)");
             return false;
         }
+        Debug.Log("space in inventory");
 
-        foreach(int index in indices) {
-            Debug.Log(index);
-        }
+        // foreach(int index in indices) {
+        //     Debug.Log(index);
+        // }
 
         if(!itemInInventory) {
-            Debug.Log("Item not in inventory");
-            instance.Items.Add(itemToAdd);
-            instance.StackSizes.Add(1);
-            UpdateInventory(Items);
+            int amountLeftToAdd = amount;
+            while(amountLeftToAdd > 0) {
+                int inventoryIndex = Items.FindIndex((x) => x == null);
+                Items[inventoryIndex] = itemToAdd;
+                int currentStackSize = StackSizes[inventoryIndex];
 
-            return true;
-        } else {
-            Debug.Log("Item in inventory");
-
-            foreach(int index in indices) {
-                if(StackSizes[index] != maxStackSize) {
-                    Debug.Log("Adding item to stack");
-                    StackSizes[index]++;
-                    UpdateInventory(Items);
-
-                    return true; 
+                if(amountLeftToAdd >= maxStackSize - currentStackSize) {
+                    StackSizes[inventoryIndex] = maxStackSize;
+                    amountLeftToAdd -= (maxStackSize - currentStackSize);
+                } else {
+                    StackSizes[inventoryIndex] += amountLeftToAdd;
+                    amountLeftToAdd = 0;
                 }
             }
-
-            Debug.Log("All stacks at max stack size, must add new stack");
-
-            Debug.Log("Adding new stack");
-            instance.Items.Add(itemToAdd);
-            instance.StackSizes.Add(1);
-            UpdateInventory(Items);
         }
 
+        // if(!itemInInventory) {
+        //     Debug.Log("Item not in inventory");
+        //     instance.Items.Add(itemToAdd);
+        //     instance.StackSizes.Add(1);
+        //     UpdateInventory(Items);
+
+        //     return true;
+        // } else {
+        //     Debug.Log("Item in inventory");
+
+        //     foreach(int index in indices) {
+        //         if(StackSizes[index] != maxStackSize) {
+        //             Debug.Log("Adding item to stack");
+        //             StackSizes[index]++;
+        //             UpdateInventory(Items);
+
+        //             return true; 
+        //         }
+        //     }
+
+        //     Debug.Log("All stacks at max stack size, must add new stack");
+
+        //     Debug.Log("Adding new stack");
+        //     instance.Items.Add(itemToAdd);
+        //     instance.StackSizes.Add(1);
+        //     UpdateInventory(Items);
+        // }
+
+        UpdateInventory(Items);
         return true;
     }
 
@@ -255,6 +279,26 @@ public class Inventory : MonoBehaviour
     public bool ItemInInventory(Item item) {
         return instance.Items.FindAll((x) => x == item).Count > 0;
 
+    }
+
+    public bool CanAddItem(Item item, int amount) {
+        List<int> indices = GetInventoryIndices(item);
+        List<Item> emptyStacks = Items.FindAll((x) => x==null);
+        if(emptyStacks.Count * maxStackSize > amount) {
+            return true;
+        }
+
+        int amountToAdd = amount;
+        if(indices.Count > 0) {
+            for(int i = 0; i < indices.Count; i++) {
+                if(StackSizes[indices[i]] < maxStackSize - amountToAdd) {
+                    return true;
+                } else {
+                    amountToAdd -= maxStackSize - StackSizes[indices[i]];
+                }
+            }
+        }
+        return false;
     }
 
 }

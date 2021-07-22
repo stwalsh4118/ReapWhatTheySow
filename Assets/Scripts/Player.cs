@@ -23,7 +23,7 @@ public class Player : MonoBehaviour
         //if we collided with a dropped item
         if(other.gameObject.GetComponent<DroppedItem>()) {
             Debug.Log("on trigger enter");
-            if(Inventory.instance.AddItem(other.gameObject.GetComponent<DroppedItem>().item)) {
+            if(Inventory.instance.AddItem(other.gameObject.GetComponent<DroppedItem>().item, 1)) {
                 Destroy(other.gameObject);
             }
         }

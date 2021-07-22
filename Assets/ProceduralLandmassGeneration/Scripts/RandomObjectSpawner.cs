@@ -14,55 +14,24 @@ public class RandomObjectSpawner : MonoBehaviour
         instance = this;
     }
 
-    public void SpawnObjects(Vector3[] vertices, Vector2 position) {
-        int index = 0;
-        for(int i = 0; i < spawnableObjects.Count; i++) {
-
-            foreach(Vector3 vertex in vertices) {
-
-                if(index % 16 == 0 && vertex.y > spawnableObjects[i].minHeightRange && vertex.y < spawnableObjects[i].maxHeightRange) {
-
-                    GameObject spawnedObject = Instantiate(spawnableObjects[i].objectToSpawn, new Vector3((vertex.x + position.x) * mapGenerator.terrainData.uniformScale, (vertex.y) * mapGenerator.terrainData.uniformScale, (vertex.z + position.y) * mapGenerator.terrainData.uniformScale) , Quaternion.identity);
-                    spawnedObject.transform.localScale = new Vector3(3,3,3);
-                    spawnedObject.transform.eulerAngles = RandomYRotation(0f, 360f);
-                    //spawnedObject.transform.parent = transform;
-
-                }
-
-            index++;
-
-            }
-        }
-
-    }
-
-    public void SpawnObjectsPoisson(Vector3[] vertices, Vector2 position, GameObject TerrainChunk) {
+    public void SpawnObjectsPoisson(Vector3[] vertices, Vector3[] normals, Vector2 position, GameObject TerrainChunk) {
         Vector2 mapSize = new Vector2((float)mapGenerator.mapChunkSize, (float)mapGenerator.mapChunkSize);
         List<Vector2> spawnPoints = PoissonDiscSampling.GeneratePoints(3f, mapSize, 5);
+        List<Vector2> pointsAlreadySpawned = new List<Vector2>();
+        SelectSpawnable(spawnableObjects, 0);
 
-        // foreach(Vector3 vertex in vertices) {
-        //     Debug.Log(vertex);
-        // }
 
-        //Debug.Log(DateTime.Now);
-        for(int i = 0; i < spawnableObjects.Count; i++) {
-
-            foreach(Vector2 spawnPoint in spawnPoints) {
-                Vector3 pointOnMesh = FindMeshHeightAtPoint(vertices, new Vector2(spawnPoint.x, spawnPoint.y));
-                //Debug.Log(closestVertexHeight);
-                if(pointOnMesh.y > spawnableObjects[i].minHeightRange && pointOnMesh.y < spawnableObjects[i].maxHeightRange) {
-                    GameObject spawnedObject = Instantiate(spawnableObjects[i].objectToSpawn, (pointOnMesh + new Vector3(position.x, 0, position.y)) * mapGenerator.terrainData.uniformScale , Quaternion.identity);
-                    //GameObject spawnedObject = Instantiate(spawnableObjects[i].objectToSpawn, new Vector3((-119) * mapGenerator.terrainData.uniformScale, closestVertexHeight * mapGenerator.terrainData.uniformScale, (119) * mapGenerator.terrainData.uniformScale) , Quaternion.identity);
-
-                    spawnedObject.transform.localScale = new Vector3(3,3,3);
-                    spawnedObject.transform.eulerAngles = RandomYRotation(0f, 360f);
-                    spawnedObject.transform.parent = TerrainChunk.transform;
-                }
-
+        foreach(Vector2 spawnPoint in spawnPoints) {
+            Vector3 pointOnMesh = FindMeshHeightAtPoint(vertices, spawnPoint);
+            Spawnable selected = SelectSpawnable(spawnableObjects, pointOnMesh.y);
+            if(selected != null) {
+                GameObject spawnedObject = Instantiate(selected.objectToSpawn, (pointOnMesh + new Vector3(position.x, -.1f, position.y)) * mapGenerator.terrainData.uniformScale, Quaternion.identity);
+                spawnedObject.transform.localScale = new Vector3(3,3,3);
+                spawnedObject.transform.eulerAngles = RandomYRotation(0f, 360f);
+                spawnedObject.transform.SetParent(TerrainChunk.transform);
             }
-        }
-        //Debug.Log(DateTime.Now);
 
+        }
         
     }
 
@@ -76,14 +45,51 @@ public class RandomObjectSpawner : MonoBehaviour
             return new Vector3(0,0,0);
         }
         return vertices[vertexIndex];
+    }
+
+    public Vector3 FindVertexNormalAtPoint(Vector3[] normals, Vector2 point) {
+        int vertexIndex = (Mathf.RoundToInt(point.x) + ((mapGenerator.mapChunkSize - 1) - Mathf.RoundToInt(point.y)) * mapGenerator.mapChunkSize);
+        if(vertexIndex < 0 || vertexIndex > normals.Length) {
+            return new Vector3(0,0,0);
+        }
+        return normals[vertexIndex];
     }   
+
+    public Spawnable SelectSpawnable(List<Spawnable> spawnables, float height) {
+        float weightSum = 0;
+        List<Spawnable> objectsInHeightRange = new List<Spawnable>();
+        for(int i = 0; i < spawnables.Count; i++) {
+            if(spawnables[i].minHeightRange <= height && spawnables[i].maxHeightRange >= height) {
+                objectsInHeightRange.Add(spawnables[i]);
+            }
+        }
+
+        if(objectsInHeightRange.Count == 0) {
+            return null;
+        }
+
+        for(int i = 0; i < objectsInHeightRange.Count; i++) {
+            weightSum += objectsInHeightRange[i].spawnWeight;
+        }
+        float random = UnityEngine.Random.value;
+        objectsInHeightRange.Sort(delegate(Spawnable a, Spawnable b) {
+            return a.spawnWeight.CompareTo(b.spawnWeight);
+        });
+
+        for(int i = 0; i < objectsInHeightRange.Count; i++) {
+            if(objectsInHeightRange[i].spawnWeight / weightSum > random) {
+                return objectsInHeightRange[i];
+            }
+        }
+        return objectsInHeightRange[objectsInHeightRange.Count - 1];
+    }
 
     [System.Serializable]
     public class Spawnable {
         public GameObject objectToSpawn;
         public float minHeightRange;
         public float maxHeightRange;
-        public float chanceToSpawn;
+        public float spawnWeight;
 
     }
 }

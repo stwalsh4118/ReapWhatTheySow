@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class ResourceNode : Interactable
 {
-    public Item resource;
+    public List<Item> resources;
     public bool spawnItemsAroundOnGeneration;
     [Range(.001f, 1000)]
     public float initialSpawnAmount;
@@ -28,7 +28,7 @@ public class ResourceNode : Interactable
 
                     Vector3 spawnPoint = new Vector3(pointOnUnitCircle.x * initialSpawnRadius, 0, pointOnUnitCircle.y * initialSpawnRadius) + transform.position;
 
-                    GameObject spawnedObject = Instantiate(Resources.Load(resource.prefabPath, typeof (GameObject))) as GameObject;
+                    GameObject spawnedObject = Instantiate(Resources.Load(resources[0].prefabPath, typeof (GameObject))) as GameObject;
                     spawnedObject.transform.position = spawnPoint;
                     }
             } else {
@@ -41,16 +41,16 @@ public class ResourceNode : Interactable
 
                     Vector3 spawnPoint = new Vector3(pointOnUnitCircle.x * initialSpawnRadius, 0, pointOnUnitCircle.y * initialSpawnRadius) + transform.position;
 
-                    GameObject spawnedObject = Instantiate(Resources.Load(resource.prefabPath, typeof (GameObject))) as GameObject;
+                    GameObject spawnedObject = Instantiate(Resources.Load(resources[0].prefabPath, typeof (GameObject))) as GameObject;
                     spawnedObject.transform.position = spawnPoint;
                 }
             }
         }
     }
 
-    public override void Interact(Vector3 hitPosition)
+    public override void Interact(Vector3 hitPosition, int equipmentTier)
     {
-        GameObject spawnedResource = Instantiate(Resources.Load(resource.prefabPath, typeof (GameObject))) as GameObject;
+        GameObject spawnedResource = Instantiate(Resources.Load(resources[0].prefabPath, typeof (GameObject))) as GameObject;
 
         //put the spawned object above the spawner object
         spawnedResource.transform.position = hitPosition;

@@ -95,7 +95,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6d6a95a55f1bcf84e9cce9d314e42733, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  resource: {fileID: 11400000, guid: 4206c0713485c8b4c83f30c79a19c6b1, type: 2}
+  resources:
+  - {fileID: 11400000, guid: 4206c0713485c8b4c83f30c79a19c6b1, type: 2}
   spawnItemsAroundOnGeneration: 1
   initialSpawnAmount: 0.11
   initialSpawnRadius: 2
@@ -110,6 +111,6 @@ MeshCollider:
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 4
-  m_Convex: 0
+  m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: 4300000, guid: f59e9c62851aaed46bb0599645bdfdc2, type: 3}

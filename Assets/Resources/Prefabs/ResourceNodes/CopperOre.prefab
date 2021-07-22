@@ -94,7 +94,7 @@ MeshCollider:
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 4
-  m_Convex: 0
+  m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: 4300000, guid: 110d2d66b09076d4e88fb91dc58961ab, type: 3}
 --- !u!114 &2754812462345050164
@@ -109,7 +109,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6d6a95a55f1bcf84e9cce9d314e42733, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  resource: {fileID: 11400000, guid: 9d7b9efe693b76642a7e24d0cd51b064, type: 2}
+  resources:
+  - {fileID: 11400000, guid: 9d7b9efe693b76642a7e24d0cd51b064, type: 2}
   spawnItemsAroundOnGeneration: 0
   initialSpawnAmount: 3
   initialSpawnRadius: 6

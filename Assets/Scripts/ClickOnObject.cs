@@ -19,9 +19,10 @@ public class ClickOnObject : MonoBehaviour
             if(Input.GetMouseButtonDown(0)) {
                 print(hit.collider.name);
 
-                if(hit.transform.GetComponent<Interactable>()) {
+                Interactable interactedWith;
+                if(interactedWith = hit.transform.GetComponent<Interactable>()) {
                     Vector3 closerHitPoint = ((hit.distance * .95f) * ray.direction) + transform.position; 
-                    hit.transform.SendMessage("Interact", closerHitPoint);
+                    interactedWith.Interact(closerHitPoint, 1);
                 }
             }
          }
