@@ -151,6 +151,35 @@ public class Inventory : MonoBehaviour
                     amountLeftToAdd = 0;
                 }
             }
+        } else {
+            int amountLeftToAdd = amount;
+            for(int i = 0; i < indices.Count; i++) {
+                if(amountLeftToAdd > 0) {
+                    int currentStackSize = StackSizes[indices[i]];
+                    if(amountLeftToAdd >= maxStackSize - currentStackSize) {
+                        StackSizes[indices[i]] = maxStackSize;
+                        amountLeftToAdd -= maxStackSize - currentStackSize;
+                    } else {
+                        StackSizes[indices[i]] += amountLeftToAdd;
+                        amountLeftToAdd = 0;
+                    }
+                } else {
+                    return true;
+                }
+            }
+            while(amountLeftToAdd > 0) {
+                int inventoryIndex = Items.FindIndex((x) => x == null);
+                Items[inventoryIndex] = itemToAdd;
+                int currentStackSize = StackSizes[inventoryIndex];
+
+                if(amountLeftToAdd >= maxStackSize - currentStackSize) {
+                    StackSizes[inventoryIndex] = maxStackSize;
+                    amountLeftToAdd -= (maxStackSize - currentStackSize);
+                } else {
+                    StackSizes[inventoryIndex] += amountLeftToAdd;
+                    amountLeftToAdd = 0;
+                }
+            }
         }
 
         // if(!itemInInventory) {
