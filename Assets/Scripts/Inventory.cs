@@ -70,7 +70,6 @@ public class Inventory : MonoBehaviour
         }
         
     }
-
     public void InitializeInventory(List<Item> itemsInInventory) {
 
         for(int i = Items.Count; i < numInventorySlots + 9; i++) {
@@ -164,6 +163,7 @@ public class Inventory : MonoBehaviour
                         amountLeftToAdd = 0;
                     }
                 } else {
+                    UpdateInventory(Items);
                     return true;
                 }
             }
@@ -199,7 +199,7 @@ public class Inventory : MonoBehaviour
             sumOfItemsInInventory += StackSizes[indicesOfItemInInventory[i]];
         }
 
-        //if we dont have enough items in our inventory we obviously cant remove them soo we stop
+        //if we dont have enough items in our inventory we obviously cant remove them so we stop
         if(sumOfItemsInInventory < amountToRemove) {
             Debug.Log("Not enough items to remove in your inventory dumbass");
             return false;
@@ -226,10 +226,10 @@ public class Inventory : MonoBehaviour
                     } else {
                         StackSizes[indicesOfItemInInventory[i]] -= numItemsToRemove;
                         
+                        //loop through the stacks and if its empty disable it
                         for(int index = StackSizes.Count - 1; index >= 0; index--) {
                             if(StackSizes[index] == 0) {
-                                StackSizes.RemoveAt(index);
-                                Items.RemoveAt(index);
+                                Items[index] = null;
                             }
                         }
 
@@ -244,12 +244,11 @@ public class Inventory : MonoBehaviour
             }
         }
 
-        //i dont think i need this extra check but maybe?
+        //i dont think i need this extra check but maybe? apparently i do because it broke everything lol
 
         for(int index = StackSizes.Count - 1; index >= 0; index--) {
             if(StackSizes[index] == 0) {
-                StackSizes.RemoveAt(index);
-                Items.RemoveAt(index);
+                Items[index] = null;
             }
         }
 
