@@ -20,7 +20,9 @@ public class Inventory : MonoBehaviour
     public int numInventorySlots = 35;
     public int numHotbarSlots = 9;
     public int activeHotbarSlot = 1;
+    public int mostRecentDragStart;
     Color hotbarSlotHighlight = new Color();
+    public bool inMenu = false;
     public static Inventory instance;
 
 
@@ -67,6 +69,7 @@ public class Inventory : MonoBehaviour
             InventoryMenu.SetActive(!InventoryMenu.activeSelf);
             GameObject.FindObjectOfType<SC_FPSController>().ToggleMovement();
             Crosshair.SetActive(!Crosshair.activeSelf);
+            inMenu = !inMenu;
         }
         
     }
@@ -79,6 +82,7 @@ public class Inventory : MonoBehaviour
 
         for(int i = 0; i < numInventorySlots; i++) {
             GameObject inventorySlot = Instantiate(InventorySlot, InventoryUI.transform);
+            inventorySlot.GetComponent<InventoryPosition>().inventoryPosition = i + 9;
             InventorySlots.Add(inventorySlot);
         }
 
@@ -302,6 +306,18 @@ public class Inventory : MonoBehaviour
         GameObject droppedItem = Instantiate(Resources.Load(itemToDrop.prefabPath, typeof (GameObject))) as GameObject;
         droppedItem.transform.position = spawnPoint;
         
+    }
+
+    public void SwapInventorySlots(int slotA, int slotB) {
+        Item tempItem = Items[slotA];
+        int tempStackSize = StackSizes[slotA];
+
+        Items[slotA] = Items[slotB];
+        StackSizes[slotA] = StackSizes[slotB];
+        Items[slotB] = tempItem;
+        StackSizes[slotB] = tempStackSize;
+
+        UpdateInventory(Items);
     }
 
     public List<int> GetInventoryIndices(Item item) {
