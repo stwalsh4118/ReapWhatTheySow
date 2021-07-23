@@ -274,15 +274,32 @@ public class Inventory : MonoBehaviour
         //if we fail removing the item, exit so we dont drop the item on the ground
         if(!RemoveItem(itemToDrop, activeHotbarSlot - 1, 1)) { return;}
 
+        float distanceToDrop = 5f;
+
+        Ray ray;
+        RaycastHit hit;
+        ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        Transform player = GameObject.Find("FPSPlayer").transform;
+        Vector3 spawnPoint;
+
+        if(Physics.Raycast(ray, out hit)) {
+            Debug.Log(hit.point);
+            Debug.Log(hit.distance);
+
+            if(hit.distance < distanceToDrop) {
+                spawnPoint = (ray.direction * hit.distance) + player.transform.position;
+            } else {
+                spawnPoint = (ray.direction * distanceToDrop) + player.transform.position;
+
+            }
+
+        } else {
+                spawnPoint = (ray.direction * distanceToDrop) + player.transform.position;
+
+        }
+
 
         GameObject droppedItem = Instantiate(Resources.Load(itemToDrop.prefabPath, typeof (GameObject))) as GameObject;
-
-        Transform player = GameObject.Find("FPSPlayer").transform;
-
-        Vector3 forward = Vector3.Normalize(player.forward);
-        forward.y = 0;
-        Vector3 spawnPoint = player.position +  forward * 3f;
-        //put the spawned object above the spawner object
         droppedItem.transform.position = spawnPoint;
         
     }
