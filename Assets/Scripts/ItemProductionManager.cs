@@ -37,7 +37,7 @@ public class ItemProductionManager : MonoBehaviour
         }
 
         for(int i = 0; i < recipe.components.Length; i++) {
-            Inventory.instance.RemoveItem(recipe.components[i].item, 0, recipe.components[i].amount, false);
+            Inventory.instance.RemoveItem(recipe.components[i].item, 0, recipe.components[i].amount);
         }
 
         Inventory.instance.Items.Add(recipe.itemProduced);

@@ -61,7 +61,7 @@ public class Inventory : MonoBehaviour
 
         if(Input.GetKeyDown(KeyCode.Q)) {
             if(instance.Items.Count > activeHotbarSlot - 1) {
-                RemoveItem(instance.Items[activeHotbarSlot - 1], activeHotbarSlot - 1, 1, true);
+                DropItem(instance.Items[activeHotbarSlot - 1]);
             }
         } else if(Input.GetKeyDown(KeyCode.Tab)) {
             InventoryMenu.SetActive(!InventoryMenu.activeSelf);
@@ -121,37 +121,51 @@ public class Inventory : MonoBehaviour
     }
 
     public bool AddItem(Item itemToAdd, int amount) {
-
+        
+        //check if theres an instance of the item we want to add in our inventory currently
         bool itemInInventory = ItemInInventory(itemToAdd);
+        //get all the slots in our inventory that the item we want to add holds
         List<int> indices = GetInventoryIndices(itemToAdd);
 
+        //check if theres room in the inventory to add the items we need to add
+        //if there is no room we cant add the items
         if(!CanAddItem(itemToAdd, amount)) {
             Debug.Log("No space to add the item(s)");
             return false;
         }
         Debug.Log("space in inventory");
 
-        // foreach(int index in indices) {
-        //     Debug.Log(index);
-        // }
-
+        //if we dont have an instance of the item in our inventory
         if(!itemInInventory) {
+
+            //store the amount of items left we need to add
             int amountLeftToAdd = amount;
+
+            //while we have more items to add
             while(amountLeftToAdd > 0) {
+
+                //since theres no instances of the item in our inventory we find the first empty inventory slot and add the item to it
                 int inventoryIndex = Items.FindIndex((x) => x == null);
                 Items[inventoryIndex] = itemToAdd;
                 int currentStackSize = StackSizes[inventoryIndex];
 
+                //if we have more items to add than can fit in the current stack we set the stack to max then subtract the difference from the amount we have left to add
                 if(amountLeftToAdd >= maxStackSize - currentStackSize) {
                     StackSizes[inventoryIndex] = maxStackSize;
                     amountLeftToAdd -= (maxStackSize - currentStackSize);
+
+                //else if theres enough room in the stack to fit the rest of the items we add them to the stack and set the amount left to add to 0 to finish adding items
                 } else {
                     StackSizes[inventoryIndex] += amountLeftToAdd;
                     amountLeftToAdd = 0;
                 }
             }
+
+        //else if we do have instances of the item in the inventory we must fill up the empty stacks first
         } else {
             int amountLeftToAdd = amount;
+
+            //loop through all of the instances of the item in our inventory and add the items to those stacks first
             for(int i = 0; i < indices.Count; i++) {
                 if(amountLeftToAdd > 0) {
                     int currentStackSize = StackSizes[indices[i]];
@@ -167,6 +181,8 @@ public class Inventory : MonoBehaviour
                     return true;
                 }
             }
+
+            //after adding to all the not full stacks if we have any items left we need to add, add them to empty inventory slots like above
             while(amountLeftToAdd > 0) {
                 int inventoryIndex = Items.FindIndex((x) => x == null);
                 Items[inventoryIndex] = itemToAdd;
@@ -188,7 +204,7 @@ public class Inventory : MonoBehaviour
 
     
     //@ SHOULD MAYBE RESTACK ITEMS AFTER REMOVING MAYBE IDK, IT WORKS RN THO
-    public bool RemoveItem(Item itemToRemove, int startIndex, int amountToRemove, bool dropItem) {
+    public bool RemoveItem(Item itemToRemove, int startIndex, int amountToRemove) {
         
         //get where the item to remove is within our inventory
         List<int> indicesOfItemInInventory = GetInventoryIndices(itemToRemove);
@@ -233,9 +249,7 @@ public class Inventory : MonoBehaviour
                             }
                         }
 
-                        if(dropItem) {
-                            DropItem(itemToRemove);
-                        }
+
                         UpdateInventory(Items);
                         return true;
                     }
@@ -252,15 +266,15 @@ public class Inventory : MonoBehaviour
             }
         }
 
-        if(dropItem) {
-            DropItem(itemToRemove);
-        }
-
         UpdateInventory(Items);
         return true;
     }
 
     public void DropItem(Item itemToDrop) {
+        //if we fail removing the item, exit so we dont drop the item on the ground
+        if(!RemoveItem(itemToDrop, activeHotbarSlot - 1, 1)) { return;}
+
+
         GameObject droppedItem = Instantiate(Resources.Load(itemToDrop.prefabPath, typeof (GameObject))) as GameObject;
 
         Transform player = GameObject.Find("FPSPlayer").transform;
@@ -270,6 +284,7 @@ public class Inventory : MonoBehaviour
         Vector3 spawnPoint = player.position +  forward * 3f;
         //put the spawned object above the spawner object
         droppedItem.transform.position = spawnPoint;
+        
     }
 
     public List<int> GetInventoryIndices(Item item) {
