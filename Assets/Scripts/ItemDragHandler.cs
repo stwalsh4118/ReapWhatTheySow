@@ -19,6 +19,7 @@ public class ItemDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, I
         Inventory
     }
 
+
     public Parent parent;
     private void Awake() {
         rectTransform = GetComponent<RectTransform>();
