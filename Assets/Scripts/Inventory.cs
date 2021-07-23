@@ -181,35 +181,7 @@ public class Inventory : MonoBehaviour
                 }
             }
         }
-
-        // if(!itemInInventory) {
-        //     Debug.Log("Item not in inventory");
-        //     instance.Items.Add(itemToAdd);
-        //     instance.StackSizes.Add(1);
-        //     UpdateInventory(Items);
-
-        //     return true;
-        // } else {
-        //     Debug.Log("Item in inventory");
-
-        //     foreach(int index in indices) {
-        //         if(StackSizes[index] != maxStackSize) {
-        //             Debug.Log("Adding item to stack");
-        //             StackSizes[index]++;
-        //             UpdateInventory(Items);
-
-        //             return true; 
-        //         }
-        //     }
-
-        //     Debug.Log("All stacks at max stack size, must add new stack");
-
-        //     Debug.Log("Adding new stack");
-        //     instance.Items.Add(itemToAdd);
-        //     instance.StackSizes.Add(1);
-        //     UpdateInventory(Items);
-        // }
-
+        
         UpdateInventory(Items);
         return true;
     }
