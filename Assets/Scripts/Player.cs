@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Linq;
 
 public class Player : MonoBehaviour
 {
@@ -35,9 +36,10 @@ public class Player : MonoBehaviour
                 MeshCollider meshCollider = hit.transform.gameObject.GetComponent<MeshCollider>();
                 if(tch != null) {
                     Debug.Log("deforming mesh");
-                    List<int> vertextIndices = terrainDeformer.GetListOfVertexIndicesAroundShapeAtPoint(hit.point, TerrainDeformer.DeformationShape.CIRCLE, 1);
+                    List<int> vertextIndices = terrainDeformer.GetListOfVertexIndicesAroundShapeAtPoint(hit.point, TerrainDeformer.DeformationShape.SQUARE, 0);
+                    vertextIndices = vertextIndices.Distinct().ToList();
                     Mesh mesh = infiniteTerrain.terrainChunkDict[tch.terrainCoord].lodMeshes[0].mesh;
-                    mesh = terrainDeformer.DeformMesh(vertextIndices, mesh, 2);
+                    mesh = terrainDeformer.DeformMesh(vertextIndices, mesh, .1f);
                     infiniteTerrain.terrainChunkDict[tch.terrainCoord].lodMeshes[0].mesh = mesh;
                     infiniteTerrain.terrainChunkDict[tch.terrainCoord].lodMeshes[0].mesh.RecalculateNormals();
                     infiniteTerrain.terrainChunkDict[tch.terrainCoord].UpdateCollisionMeshAfterDeformation();

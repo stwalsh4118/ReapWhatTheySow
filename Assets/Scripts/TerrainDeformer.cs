@@ -24,25 +24,33 @@ public class TerrainDeformer : MonoBehaviour
         //Debug.Log(vertexIndices[0]);
         Debug.Log(FindVertexIndex(new Vector2(xCenter,yCenter)));
         vertexIndices.Add(FindVertexIndex(new Vector2(xCenter, yCenter)));
-        
-        for (int x = xCenter - radius ; x <= xCenter; x++){
-            for (int y = yCenter - radius ; y <= yCenter; y++){
-                // we don't have to take the square root, it's slow
-                if ((x - xCenter)*(x - xCenter) + (y - yCenter)*(y - yCenter) <= radius*radius) {
-                    int xSym = xCenter - (x - xCenter);
-                    int ySym = yCenter - (y - yCenter);
-                    // (x, y), (x, ySym), (xSym , y), (xSym, ySym) are in the circle
-                    vertexIndices.Add(FindVertexIndex(new Vector2(x,y)));
-                    vertexIndices.Add(FindVertexIndex(new Vector2(x,ySym)));
-                    vertexIndices.Add(FindVertexIndex(new Vector2(xSym,y)));
-                    vertexIndices.Add(FindVertexIndex(new Vector2(x,ySym)));
-                    // Debug.Log(new Vector2(x,y));
-                    // Debug.Log(new Vector2(x,ySym));
-                    // Debug.Log(new Vector2(xSym,y));
-                    // Debug.Log(new Vector2(xSym,ySym ));
+        if(shape == DeformationShape.CIRCLE) {
+            for (int x = xCenter - radius ; x <= xCenter; x++){
+                for (int y = yCenter - radius ; y <= yCenter; y++){
+                    // we don't have to take the square root, it's slow
+                    if ((x - xCenter)*(x - xCenter) + (y - yCenter)*(y - yCenter) <= radius*radius) {
+                        int xSym = xCenter - (x - xCenter);
+                        int ySym = yCenter - (y - yCenter);
+                        // (x, y), (x, ySym), (xSym , y), (xSym, ySym) are in the circle
+                        vertexIndices.Add(FindVertexIndex(new Vector2(x,y)));
+                        vertexIndices.Add(FindVertexIndex(new Vector2(x,ySym)));
+                        vertexIndices.Add(FindVertexIndex(new Vector2(xSym,y)));
+                        vertexIndices.Add(FindVertexIndex(new Vector2(x,ySym)));
+                        // Debug.Log(new Vector2(x,y));
+                        // Debug.Log(new Vector2(x,ySym));
+                        // Debug.Log(new Vector2(xSym,y));
+                        // Debug.Log(new Vector2(xSym,ySym ));
+                    }
                 }
             }
-        }   
+        } else if(shape == DeformationShape.SQUARE) {
+            for(int x = -radius; x <= radius; x++) {
+                for(int y = -radius; y <= radius; y++) {
+                    vertexIndices.Add(FindVertexIndex(new Vector3(xCenter + x, yCenter + y)));
+                }
+            }
+        }
+           
         return vertexIndices;
     }
 
