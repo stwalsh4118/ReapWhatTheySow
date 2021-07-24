@@ -14,7 +14,7 @@ public class Interactable : MonoBehaviour
         Debug.Log("Interacted with");
     }
 
-    public virtual void Interact(Vector3 position, int equipmentTier) {
+    public virtual void Interact(Vector3 position, int equipmentTier, equipmentType equippedType) {
 
     }
 }

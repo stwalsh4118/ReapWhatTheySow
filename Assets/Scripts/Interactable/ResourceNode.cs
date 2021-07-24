@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class ResourceNode : Interactable
 {
-    public List<Item> resources;
+    public List<Resource> resources;
     public bool spawnItemsAroundOnGeneration;
     [Range(.001f, 1000)]
     public float initialSpawnAmount;
@@ -28,7 +28,7 @@ public class ResourceNode : Interactable
 
                     Vector3 spawnPoint = new Vector3(pointOnUnitCircle.x * initialSpawnRadius, 0, pointOnUnitCircle.y * initialSpawnRadius) + transform.position;
 
-                    GameObject spawnedObject = Instantiate(Resources.Load(resources[0].prefabPath, typeof (GameObject))) as GameObject;
+                    GameObject spawnedObject = Instantiate(Resources.Load(resources[0].item.prefabPath, typeof (GameObject))) as GameObject;
                     spawnedObject.transform.position = spawnPoint;
                     }
             } else {
@@ -41,16 +41,18 @@ public class ResourceNode : Interactable
 
                     Vector3 spawnPoint = new Vector3(pointOnUnitCircle.x * initialSpawnRadius, 0, pointOnUnitCircle.y * initialSpawnRadius) + transform.position;
 
-                    GameObject spawnedObject = Instantiate(Resources.Load(resources[0].prefabPath, typeof (GameObject))) as GameObject;
+                    GameObject spawnedObject = Instantiate(Resources.Load(resources[0].item.prefabPath, typeof (GameObject))) as GameObject;
                     spawnedObject.transform.position = spawnPoint;
                 }
             }
         }
     }
 
-    public override void Interact(Vector3 hitPosition, int equipmentTier)
+    public override void Interact(Vector3 hitPosition, int equipmentTier, equipmentType equippedType)
     {
-        GameObject spawnedResource = Instantiate(Resources.Load(resources[0].prefabPath, typeof (GameObject))) as GameObject;
+        Resource resource = SelectResource(resources, equipmentTier, equippedType);
+        if(resource == null) {return ;}
+        GameObject spawnedResource = Instantiate(Resources.Load(resource.item.prefabPath, typeof (GameObject))) as GameObject;
 
         //put the spawned object above the spawner object
         spawnedResource.transform.position = hitPosition;
@@ -63,10 +65,45 @@ public class ResourceNode : Interactable
         rb.AddRelativeForce(OUS*20);
     }
 
+    public Resource SelectResource(List<Resource> resources, int equipmentTier, equipmentType equippedType) {
+        float weightSum = 0;
+        List<Resource> objectsInEquipmentRange = new List<Resource>();
+        for(int i = 0; i < resources.Count; i++) {
+            if(resources[i].item.itemTier <= equipmentTier && (resources[i].item.equipmentToCollect == equippedType || equippedType == equipmentType.ALL || resources[i].item.equipmentToCollect == equipmentType.ALL)) {
+                objectsInEquipmentRange.Add(resources[i]);
+            }
+        }
+
+        if(objectsInEquipmentRange.Count == 0) {
+            return null;
+        }
+
+        for(int i = 0; i < objectsInEquipmentRange.Count; i++) {
+            weightSum += objectsInEquipmentRange[i].collectionWeight;
+        }
+        float random = UnityEngine.Random.value;
+        objectsInEquipmentRange.Sort(delegate(Resource a, Resource b) {
+            return a.collectionWeight.CompareTo(b.collectionWeight);
+        });
+
+        for(int i = 0; i < objectsInEquipmentRange.Count; i++) {
+            if(objectsInEquipmentRange[i].collectionWeight / weightSum > random) {
+                return objectsInEquipmentRange[i];
+            }
+        }
+        return objectsInEquipmentRange[objectsInEquipmentRange.Count - 1];
+    }
+
     void OnDrawGizmosSelected()
     {
         // Draw a yellow sphere at the transform's position
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(transform.position, initialSpawnRadius);
+    }
+
+    [System.Serializable]
+    public class Resource {
+        public ResourceItem item;
+        public float collectionWeight;
     }
 }

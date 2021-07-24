@@ -13,5 +13,10 @@ MonoBehaviour:
   m_Name: Coconut
   m_EditorClassIdentifier: 
   itemName: Coconut
+  flavorText: 
+  itemTier: 0
+  equipment: 1
   prefabPath: Prefabs/Items/Coconut
   icon: {fileID: 21300000, guid: 82f07fcd4398fae418e8ea095e19cb84, type: 3}
+  typeOfEquipment: 2
+  equipmentToCollect: 0

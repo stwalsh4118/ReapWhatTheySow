@@ -96,7 +96,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   resources:
-  - {fileID: 11400000, guid: 4206c0713485c8b4c83f30c79a19c6b1, type: 2}
+  - item: {fileID: 11400000, guid: 4206c0713485c8b4c83f30c79a19c6b1, type: 2}
+    collectionWeight: 1
   spawnItemsAroundOnGeneration: 1
   initialSpawnAmount: 0.11
   initialSpawnRadius: 2

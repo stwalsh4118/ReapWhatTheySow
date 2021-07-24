@@ -192,6 +192,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 08988babf41271e46a25bb7fcb33ed57, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  itemInHand: {fileID: 0}
+  interactRange: 5
 --- !u!1 &185145536213170873
 GameObject:
   m_ObjectHideFlags: 0
@@ -203,7 +205,6 @@ GameObject:
   - component: {fileID: 185145536213170874}
   - component: {fileID: 185145536213170875}
   - component: {fileID: 185145536213170872}
-  - component: {fileID: 185145536213170877}
   m_Layer: 0
   m_Name: FPSPlayer
   m_TagString: Player
@@ -265,15 +266,3 @@ MonoBehaviour:
   lookSpeed: 3.5
   lookXLimit: 90
   canMove: 1
---- !u!114 &185145536213170877
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 185145536213170873}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2f5a8f2570fde96478affcff6afb9ca3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
