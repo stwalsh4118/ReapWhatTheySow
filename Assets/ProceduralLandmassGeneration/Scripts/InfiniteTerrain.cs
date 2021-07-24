@@ -19,13 +19,13 @@ public class InfiniteTerrain : MonoBehaviour
     public static Vector2 viewerPosition;
     private Vector2 previousViewerPosition;
 
-    private static MapGenerator mapGenerator;
+    public static MapGenerator mapGenerator;
     private int chunkSize;
     private int chunksVisibleInViewDistance;
     public Material mapMaterial;
 
     //dictionary to save a terrain chunk and the coordinate its in (each chunk is 1 place on the grid, so middle chunk in 0,0 and chunk on the left is -1,0 etc.)
-    private Dictionary<Vector2, TerrainChunk> terrainChunkDict = new Dictionary<Vector2, TerrainChunk>();
+    public Dictionary<Vector2, TerrainChunk> terrainChunkDict = new Dictionary<Vector2, TerrainChunk>();
 
     //list of chunks we need to set not visible since theyre out of range
     private static List<TerrainChunk> visibleTerrainChunks = new List<TerrainChunk>();
@@ -95,6 +95,11 @@ public class InfiniteTerrain : MonoBehaviour
         }
     }
 
+    public Mesh GetTerrainMesh(GameObject Terrain) {
+        TerrainChunk tc = terrainChunkDict[Terrain.GetComponent<TerrainCoordHolder>().terrainCoord];
+        return tc.lodMeshes[0].mesh;
+    }
+
     //class created to hold the data for our chunks
     public class TerrainChunk {
 
@@ -105,10 +110,11 @@ public class InfiniteTerrain : MonoBehaviour
         Vector2 position;
         Bounds chunkBounds;
         MeshRenderer meshRenderer;
-        MeshFilter meshFilter;
-        MeshCollider meshCollider;
+        public MeshFilter meshFilter;
+        public MeshCollider meshCollider;
+        public TerrainCoordHolder terrainCoordHolder;
         LODInfo[] detailLevels;
-        LODMesh[] lodMeshes;
+        public LODMesh[] lodMeshes;
         MapData mapData;
         int colliderLODIndex;
         bool mapDataRecieved;
@@ -131,6 +137,8 @@ public class InfiniteTerrain : MonoBehaviour
             Vector3 positionV3 = new Vector3(position.x, 0, position.y);
             //create the chunk game object
             meshObject = new GameObject("Terrain Chunk");
+            terrainCoordHolder = meshObject.AddComponent<TerrainCoordHolder>();
+            terrainCoordHolder.terrainCoord = coord;
             GameObject Water = Instantiate(Resources.Load("Prefabs/Water", typeof (GameObject))) as GameObject;
             Water.transform.parent = meshObject.transform;
             GameObject OutOfBoundsPlane = Instantiate(Resources.Load("Prefabs/OutOfBoundsPlane", typeof (GameObject))) as GameObject;
@@ -244,6 +252,10 @@ public class InfiniteTerrain : MonoBehaviour
                    hasSetCollider = true;
                 }
             }
+        } 
+
+        public void UpdateCollisionMeshAfterDeformation() {
+            meshCollider.sharedMesh = lodMeshes[colliderLODIndex].mesh;
         }
 
         public void SetVisible(bool visible) {
@@ -256,7 +268,7 @@ public class InfiniteTerrain : MonoBehaviour
     }
 
     //class used to hold the meshes of differed LODs
-    private class LODMesh {
+    public class LODMesh {
         public Mesh mesh;
         public bool hasRequestedMesh;
         public bool hasMesh;

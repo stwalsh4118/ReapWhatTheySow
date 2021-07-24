@@ -7,6 +7,8 @@ public class Player : MonoBehaviour
 
     public Item itemInHand;
     public float interactRange = 8f;
+    public TerrainDeformer terrainDeformer;
+    public InfiniteTerrain infiniteTerrain;
     // Start is called before the first frame update
     void Start()
     {
@@ -22,7 +24,28 @@ public class Player : MonoBehaviour
 
             itemInHand = Inventory.instance.Items[Inventory.instance.activeHotbarSlot - 1];
             Click();
+        } else if(Input.GetMouseButtonDown(1)) {
+            Ray ray;
+            RaycastHit hit;
+            ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            
+            if(Physics.Raycast(ray, out hit)) {
+                TerrainCoordHolder tch = hit.transform.gameObject.GetComponent<TerrainCoordHolder>();
+                MeshFilter meshFilter = hit.transform.gameObject.GetComponent<MeshFilter>();
+                MeshCollider meshCollider = hit.transform.gameObject.GetComponent<MeshCollider>();
+                if(tch != null) {
+                    Debug.Log("deforming mesh");
+                    List<int> vertextIndices = terrainDeformer.GetListOfVertexIndicesAroundShapeAtPoint(hit.point, TerrainDeformer.DeformationShape.CIRCLE, 1);
+                    Mesh mesh = infiniteTerrain.terrainChunkDict[tch.terrainCoord].lodMeshes[0].mesh;
+                    mesh = terrainDeformer.DeformMesh(vertextIndices, mesh, 2);
+                    infiniteTerrain.terrainChunkDict[tch.terrainCoord].lodMeshes[0].mesh = mesh;
+                    infiniteTerrain.terrainChunkDict[tch.terrainCoord].lodMeshes[0].mesh.RecalculateNormals();
+                    infiniteTerrain.terrainChunkDict[tch.terrainCoord].UpdateCollisionMeshAfterDeformation();
+                }
+
+            }
         }
+
     }
 
     private void OnTriggerEnter(Collider other) {

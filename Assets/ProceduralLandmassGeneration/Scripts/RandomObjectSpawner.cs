@@ -41,7 +41,7 @@ public class RandomObjectSpawner : MonoBehaviour
 
     public Vector3 FindMeshHeightAtPoint(Vector3[] vertices, Vector2 point) {
         int vertexIndex = (Mathf.RoundToInt(point.x) + ((mapGenerator.mapChunkSize - 1) - Mathf.RoundToInt(point.y)) * mapGenerator.mapChunkSize);
-        if(vertexIndex < 0 || vertexIndex > vertices.Length) {
+        if(vertexIndex < 0 || vertexIndex >= vertices.Length) {
             return new Vector3(0,0,0);
         }
         return vertices[vertexIndex];
@@ -54,6 +54,7 @@ public class RandomObjectSpawner : MonoBehaviour
         }
         return normals[vertexIndex];
     }   
+
 
     public Spawnable SelectSpawnable(List<Spawnable> spawnables, float height) {
         float weightSum = 0;
