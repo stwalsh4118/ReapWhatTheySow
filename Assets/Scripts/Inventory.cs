@@ -22,7 +22,6 @@ public class Inventory : MonoBehaviour
     public int activeHotbarSlot = 1;
     public int mostRecentDragStart;
     Color hotbarSlotHighlight = new Color();
-    public bool inMenu = false;
     public static Inventory instance;
 
 
@@ -69,7 +68,8 @@ public class Inventory : MonoBehaviour
             InventoryMenu.SetActive(!InventoryMenu.activeSelf);
             GameObject.FindObjectOfType<SC_FPSController>().ToggleMovement();
             Crosshair.SetActive(!Crosshair.activeSelf);
-            inMenu = !inMenu;
+
+            GameStateManager.instance.ToggleGameState(GameStateManager.GameState.InMenu);
         }
         
     }

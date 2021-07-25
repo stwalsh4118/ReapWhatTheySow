@@ -65,7 +65,7 @@ public class Player : MonoBehaviour
         Ray ray;
         RaycastHit hit;
 
-        if(Inventory.instance.inMenu) {return;}
+        if(GameStateManager.instance.gameStates.Contains(GameStateManager.GameState.InMenu)) {return;}
         //get a ray coming out from the mouse (in our case the middle of the screen)
         ray = Camera.main.ScreenPointToRay(Input.mousePosition);
 
