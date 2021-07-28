@@ -18,6 +18,9 @@ public class GameStateManager : MonoBehaviour
 
     public static GameStateManager instance;
 
+    public delegate void GameStateChange();
+    public static event GameStateChange OnGameStateChange;
+
     private void Awake() {
         if(instance != null && instance != this) {
             Destroy(this.gameObject);
@@ -35,7 +38,9 @@ public class GameStateManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+        if(Input.GetKeyDown(KeyCode.B)) {
+            ToggleGameState(GameState.BuildMode);
+        }
     }
 
     public void ToggleGameState(GameState gameState) {
@@ -45,5 +50,7 @@ public class GameStateManager : MonoBehaviour
         } else {
             gameStates.Add(gameState);
         }
+
+        OnGameStateChange();
     }
 }

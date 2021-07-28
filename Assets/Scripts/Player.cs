@@ -25,7 +25,7 @@ public class Player : MonoBehaviour
 
             itemInHand = Inventory.instance.Items[Inventory.instance.activeHotbarSlot - 1];
             Click();
-        } else if(Input.GetMouseButtonDown(1)) {
+        } else if(Input.GetMouseButtonDown(1) && GameStateManager.instance.gameStates.Contains(GameStateManager.GameState.BuildMode)) {
             Ray ray;
             RaycastHit hit;
             ray = Camera.main.ScreenPointToRay(Input.mousePosition);

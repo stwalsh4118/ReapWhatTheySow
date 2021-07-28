@@ -33,7 +33,6 @@ public class SC_FPSController : MonoBehaviour
 
     void Update()
     {
-        canMove = !(GameStateManager.instance.gameStates.Contains(GameStateManager.GameState.InMenu) || GameStateManager.instance.gameStates.Contains(GameStateManager.GameState.Paused));
 
 
         // We are grounded, so recalculate move direction based on axes
@@ -77,23 +76,32 @@ public class SC_FPSController : MonoBehaviour
 
         //press p to change the cursor mode
         if(Input.GetKeyDown(KeyCode.P)) {
-            ToggleMovement();
             GameStateManager.instance.ToggleGameState(GameStateManager.GameState.Paused);
         }
     }
 
+    private void OnEnable() {
+        GameStateManager.OnGameStateChange += ToggleMovement;
+    }
+
+    private void OnDisable() {
+        GameStateManager.OnGameStateChange -= ToggleMovement;
+    }
+
     public void ToggleMovement() {
-        if(cursorLocked) {
+        if(GameStateManager.instance.gameStates.Contains(GameStateManager.GameState.InMenu) || GameStateManager.instance.gameStates.Contains(GameStateManager.GameState.Paused)) {
+                canMove = false;
                 cursorLocked = false;
                 Cursor.lockState = CursorLockMode.None;
                 Cursor.visible = true;
             
             //if unlocked lock it
-            } else {
-                cursorLocked = true;
-                Cursor.lockState = CursorLockMode.Locked;
-                Cursor.visible = false;
-            }
+        } else {
+            canMove = true;
+            cursorLocked = true;
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+        }
     }
 
     
