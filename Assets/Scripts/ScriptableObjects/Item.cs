@@ -19,5 +19,6 @@ public class Item : ScriptableObject
 public enum equipmentType {
     ALL,
     AXE,
-    PICK
+    PICK,
+    NONE
 }

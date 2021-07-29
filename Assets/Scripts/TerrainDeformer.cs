@@ -6,6 +6,7 @@ public class TerrainDeformer : MonoBehaviour
 {
     public InfiniteTerrain terrainGenerator;
     public MapGenerator mapGenerator;
+    public float minHeight = 10f;
 
     public enum DeformationShape {
         CIRCLE,
@@ -57,7 +58,12 @@ public class TerrainDeformer : MonoBehaviour
     public Mesh DeformMesh(List<int> vertexIndices, Mesh mesh, float height) {
         Vector3[] vertices = mesh.vertices;
         for(int i = 0; i < vertexIndices.Count; i++) {
-            vertices[vertexIndices[i]] += new Vector3(0, height, 0);
+            Debug.Log(vertices[vertexIndices[i]].y);
+            if(vertices[vertexIndices[i]].y + height <= (minHeight / mapGenerator.terrainData.uniformScale) && height < 0) {
+                vertices[vertexIndices[i]].y = (minHeight / mapGenerator.terrainData.uniformScale) - .01f;
+            } else {
+                vertices[vertexIndices[i]] += new Vector3(0, height, 0);
+            }
         }
         mesh.vertices = vertices;
         return mesh;

@@ -38,6 +38,9 @@ public class ItemDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, I
         canvasGroup.blocksRaycasts = false;
         image.maskable = false;
         Inventory.instance.mostRecentDragStart = transform.parent.GetComponent<InventoryPosition>().inventoryPosition;
+        Vector2 mousePosInRectTransform;
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(rectTransform, Input.mousePosition, null, out mousePosInRectTransform);
+        rectTransform.anchoredPosition = mousePosInRectTransform;
     }
 
     //when click and drag an item move it so it follows the mouse cursor

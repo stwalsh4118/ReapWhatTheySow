@@ -18,5 +18,5 @@ MonoBehaviour:
   equipment: 0
   prefabPath: Prefabs/Items/Tin
   icon: {fileID: 21300000, guid: 55af273774081f0468bd8936c5726a34, type: 3}
-  typeOfEquipment: 0
+  typeOfEquipment: 3
   equipmentToCollect: 2

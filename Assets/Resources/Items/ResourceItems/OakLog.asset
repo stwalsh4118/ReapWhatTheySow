@@ -18,5 +18,5 @@ MonoBehaviour:
   equipment: 0
   prefabPath: Prefabs/Items/Log
   icon: {fileID: 21300000, guid: 762cc01d4e79de94eaf3634a1aa0fd1c, type: 3}
-  typeOfEquipment: 0
+  typeOfEquipment: 3
   equipmentToCollect: 1

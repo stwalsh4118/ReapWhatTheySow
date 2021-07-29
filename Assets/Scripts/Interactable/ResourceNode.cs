@@ -69,8 +69,10 @@ public class ResourceNode : Interactable
         float weightSum = 0;
         List<Resource> objectsInEquipmentRange = new List<Resource>();
         for(int i = 0; i < resources.Count; i++) {
-            if(resources[i].item.itemTier <= equipmentTier && (resources[i].item.equipmentToCollect == equippedType || equippedType == equipmentType.ALL || resources[i].item.equipmentToCollect == equipmentType.ALL)) {
+            Debug.Log(resources[i].item.itemName + " " + resources[i].item.itemTier.ToString());
+            if(resources[i].item.itemTier == 0 || resources[i].item.itemTier <= equipmentTier && (resources[i].item.equipmentToCollect == equippedType || equippedType == equipmentType.ALL || resources[i].item.equipmentToCollect == equipmentType.ALL)) {
                 objectsInEquipmentRange.Add(resources[i]);
+                Debug.Log(resources[i].item.itemName);
             }
         }
 

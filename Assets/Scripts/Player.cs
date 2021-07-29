@@ -21,11 +21,7 @@ public class Player : MonoBehaviour
     {
         if(Input.GetKeyDown(KeyCode.Escape)) {
             Debug.Break();
-        } else if(Input.GetMouseButtonDown(0)) {
-
-            itemInHand = Inventory.instance.Items[Inventory.instance.activeHotbarSlot - 1];
-            Click();
-        } else if(Input.GetMouseButtonDown(1) && GameStateManager.instance.gameStates.Contains(GameStateManager.GameState.BuildMode)) {
+        } else if(Input.GetMouseButtonDown(0) && GameStateManager.instance.gameStates.Contains(GameStateManager.GameState.BuildMode)) {
             Ray ray;
             RaycastHit hit;
             ray = Camera.main.ScreenPointToRay(Input.mousePosition);
@@ -45,7 +41,32 @@ public class Player : MonoBehaviour
                     infiniteTerrain.terrainChunkDict[tch.terrainCoord].UpdateCollisionMeshAfterDeformation();
                 }
 
-            }
+            } 
+        } else if(Input.GetMouseButtonDown(1) && GameStateManager.instance.gameStates.Contains(GameStateManager.GameState.BuildMode)) {
+            Ray ray;
+            RaycastHit hit;
+            ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            
+            if(Physics.Raycast(ray, out hit)) {
+                TerrainCoordHolder tch = hit.transform.gameObject.GetComponent<TerrainCoordHolder>();
+                MeshFilter meshFilter = hit.transform.gameObject.GetComponent<MeshFilter>();
+                MeshCollider meshCollider = hit.transform.gameObject.GetComponent<MeshCollider>();
+                if(tch != null) {
+                    Debug.Log("deforming mesh");
+                    List<int> vertextIndices = terrainDeformer.GetListOfVertexIndicesAroundShapeAtPoint(hit.point, TerrainDeformer.DeformationShape.SQUARE, 0);
+                    vertextIndices = vertextIndices.Distinct().ToList();
+                    Mesh mesh = infiniteTerrain.terrainChunkDict[tch.terrainCoord].lodMeshes[0].mesh;
+                    mesh = terrainDeformer.DeformMesh(vertextIndices, mesh, -.1f);
+                    infiniteTerrain.terrainChunkDict[tch.terrainCoord].lodMeshes[0].mesh = mesh;
+                    infiniteTerrain.terrainChunkDict[tch.terrainCoord].lodMeshes[0].mesh.RecalculateNormals();
+                    infiniteTerrain.terrainChunkDict[tch.terrainCoord].UpdateCollisionMeshAfterDeformation();
+                }
+
+            } 
+        } else if(Input.GetMouseButtonDown(0)) {
+
+            itemInHand = Inventory.instance.Items[Inventory.instance.activeHotbarSlot - 1];
+            Click();
         }
 
     }
@@ -80,6 +101,8 @@ public class Player : MonoBehaviour
                     interactedWith.Interact(closerHitPoint, 0, equipmentType.ALL);
                 } else if(itemInHand.equipment) {
                     interactedWith.Interact(closerHitPoint, itemInHand.itemTier + 1, itemInHand.typeOfEquipment);
+                } else if(!itemInHand.equipment) {
+                    interactedWith.Interact(closerHitPoint, itemInHand.itemTier + 1, equipmentType.NONE);
                 }
                 
             }

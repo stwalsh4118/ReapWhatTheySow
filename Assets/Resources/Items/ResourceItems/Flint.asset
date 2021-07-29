@@ -18,5 +18,5 @@ MonoBehaviour:
   equipment: 0
   prefabPath: Prefabs/Items/Flint
   icon: {fileID: 21300000, guid: 4a4e598cff882aa49adcb246f1f6bc50, type: 3}
-  typeOfEquipment: 0
+  typeOfEquipment: 3
   equipmentToCollect: 2

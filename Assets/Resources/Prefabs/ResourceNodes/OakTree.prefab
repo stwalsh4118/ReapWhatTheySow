@@ -98,6 +98,8 @@ MonoBehaviour:
   resources:
   - item: {fileID: 11400000, guid: 3abeb8e44df4c6e40b53df28239b9d27, type: 2}
     collectionWeight: 1
+  - item: {fileID: 11400000, guid: 7813474afacfd3948b4bea5bd6aed10e, type: 2}
+    collectionWeight: 1
   spawnItemsAroundOnGeneration: 0
   initialSpawnAmount: 0
   initialSpawnRadius: 0

@@ -5,7 +5,8 @@ using TMPro;
 
 public class HUDManager : MonoBehaviour
 {
-    public TextMeshProUGUI BuildMode;
+    public TextMeshProUGUI buildMode;
+    public GameObject buildGrid;
 
     private void OnEnable() {
         GameStateManager.OnGameStateChange += ChangeHUD;
@@ -17,9 +18,11 @@ public class HUDManager : MonoBehaviour
 
     public void ChangeHUD() {
         if(GameStateManager.instance.gameStates.Contains(GameStateManager.GameState.BuildMode)) {
-            BuildMode.text = "BUILD MODE: ON";
+            buildMode.text = "BUILD MODE: ON";
+            buildGrid.SetActive(true);
         } else {
-            BuildMode.text = "BUILD MODE: OFF";
+            buildMode.text = "BUILD MODE: OFF";
+            buildGrid.SetActive(false);
         }
     }
 

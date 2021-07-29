@@ -17,7 +17,6 @@ public class SC_FPSController : MonoBehaviour
     CharacterController characterController;
     Vector3 moveDirection = Vector3.zero;
     float rotationX = 0;
-    bool cursorLocked = true;
 
     [HideInInspector]
     public bool canMove = true;
@@ -91,14 +90,12 @@ public class SC_FPSController : MonoBehaviour
     public void ToggleMovement() {
         if(GameStateManager.instance.gameStates.Contains(GameStateManager.GameState.InMenu) || GameStateManager.instance.gameStates.Contains(GameStateManager.GameState.Paused)) {
                 canMove = false;
-                cursorLocked = false;
                 Cursor.lockState = CursorLockMode.None;
                 Cursor.visible = true;
             
             //if unlocked lock it
         } else {
             canMove = true;
-            cursorLocked = true;
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
         }
